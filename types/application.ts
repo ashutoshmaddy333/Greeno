@@ -1,0 +1,1 @@
+export type ApplicationStatus = "pending" | "reviewing" | "shortlisted" | "rejected" | "hired" 

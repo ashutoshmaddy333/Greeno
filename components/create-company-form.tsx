@@ -18,6 +18,7 @@ interface CreateCompanyFormProps {
 export function CreateCompanyForm({ onSuccess }: CreateCompanyFormProps) {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
+  const [logoFile, setLogoFile] = useState<File | null>(null)
 
   const {
     register,
@@ -57,7 +58,8 @@ export function CreateCompanyForm({ onSuccess }: CreateCompanyFormProps) {
         size: data.size,
         location: data.location,
         website: data.website,
-        foundedYear: data.foundedYear
+        foundedYear: data.foundedYear,
+        logo: logoFile,
       })
 
       const result = await createCompanyProfile(data)
@@ -210,6 +212,19 @@ export function CreateCompanyForm({ onSuccess }: CreateCompanyFormProps) {
             placeholder="2020"
           />
           {errors.foundedYear && <p className="text-sm text-destructive">{String(errors.foundedYear.message)}</p>}
+        </div>
+
+        {/* Company Logo Upload */}
+        <div className="space-y-2">
+          <Label htmlFor="logo" className="flex items-center gap-2">
+            <Input
+              id="logo"
+              type="file"
+              accept="image/*"
+              onChange={(e) => setLogoFile(e.target.files ? e.target.files[0] : null)}
+            />
+          </Label>
+          {/* {errors.logo && <p className="text-sm text-destructive">{String(errors.logo.message)}</p>} */}
         </div>
       </div>
 

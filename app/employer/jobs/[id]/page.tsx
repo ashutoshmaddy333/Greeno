@@ -42,6 +42,7 @@ import { showToast } from "@/lib/toast"
 import { Switch } from "@/components/ui/switch"
 import { Label } from "@/components/ui/label"
 import toast from "react-hot-toast"
+import { getLogoUrl } from "@/lib/utils"
 
 interface Job {
   id: string
@@ -341,7 +342,7 @@ export default function JobDetailPage({ params }: { params: Promise<{ id: string
           </CardContent>
         </Card>
 
-        <div className="grid gap-6 lg:grid-cols-3">
+        <div className="grid gap-6 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
           <div className="lg:col-span-2">
             <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
               <TabsList className="grid w-full grid-cols-3">
@@ -419,7 +420,7 @@ export default function JobDetailPage({ params }: { params: Promise<{ id: string
                       <div className="flex items-center space-x-4">
                         <div className="h-16 w-16 rounded-lg border bg-muted p-2">
                           <img
-                            src={job.company.logo || "/placeholder.svg?height=60&width=60"}
+                            src={getLogoUrl(job.company.logo)}
                             alt={job.company.name}
                             className="h-full w-full object-contain"
                           />

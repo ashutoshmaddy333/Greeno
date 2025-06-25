@@ -2,6 +2,7 @@ import mongoose, { type Document, Schema } from "mongoose"
 
 export interface ICompany extends Document {
   name: string
+  slug: string
   website: string
   description: string
   industry: string
@@ -19,6 +20,7 @@ export interface ICompany extends Document {
   jobs: mongoose.Types.ObjectId[]
   createdAt: Date
   updatedAt: Date
+  logo?: string
 }
 
 const CompanySchema: Schema = new Schema(
@@ -28,6 +30,13 @@ const CompanySchema: Schema = new Schema(
       required: [true, "Please provide a company name"],
       trim: true,
       maxlength: [100, "Company name cannot be more than 100 characters"],
+    },
+    slug: {
+      type: String,
+      unique: true,
+      lowercase: true,
+      trim: true,
+      index: true
     },
     website: {
       type: String,
@@ -73,6 +82,9 @@ const CompanySchema: Schema = new Schema(
         ref: "Job",
       },
     ],
+    logo: {
+      type: String,
+    },
   },
   {
     timestamps: true,
@@ -81,5 +93,52 @@ const CompanySchema: Schema = new Schema(
 
 // Create indexes for search
 CompanySchema.index({ name: "text", description: "text", industry: "text" })
+
+// Generate slug before saving
+CompanySchema.pre("save", function(this: ICompany, next) {
+  if (!this.isModified("name")) return next()
+  
+  // Generate slug from name
+  const originalName = this.name
+  this.slug = this.name
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "")
+  
+  console.log('Generated slug on save:', { originalName, slug: this.slug })
+  next()
+})
+
+// Generate slug before updating
+CompanySchema.pre("findOneAndUpdate", function(this: mongoose.Query<any, any>, next: () => void) {
+  const update = this.getUpdate() as { $set?: { name?: string } }
+  if (update.$set?.name) {
+    const slug = update.$set.name
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/(^-|-$)/g, "")
+    
+    console.log('Generated slug on update:', { 
+      originalName: update.$set.name, 
+      slug 
+    })
+    
+    this.set({ slug })
+  }
+  next()
+})
+
+// Generate slug before updating by ID
+CompanySchema.pre(/^find/, function(this: mongoose.Query<any, any>, next: () => void) {
+  const update = this.getUpdate() as { $set?: { name?: string; slug?: string } } | undefined
+  if (update && typeof update === 'object' && update.$set?.name) {
+    const slug = update.$set.name
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/(^-|-$)/g, "")
+    update.$set.slug = slug
+  }
+  next()
+})
 
 export default mongoose.models.Company || mongoose.model<ICompany>("Company", CompanySchema)

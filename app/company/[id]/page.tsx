@@ -9,6 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { showToast } from "@/lib/toast"
 import { Building, MapPin, Users, Globe, Calendar, Briefcase } from "lucide-react"
 import Link from "next/link"
+import { getLogoUrl } from "@/lib/utils"
 
 interface Company {
   id: string
@@ -53,25 +54,53 @@ export default function CompanyPage() {
   const [jobs, setJobs] = useState<Job[]>([])
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState("about")
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    fetchCompany()
+    const slug = params.id as string
+    console.log('Company detail page - params:', params)
+    console.log('Company detail page - slug:', slug)
+    if (!slug) {
+      console.error('Company detail page - No slug provided')
+      setError("Invalid company URL")
+      setLoading(false)
+      return
+    }
+    fetchCompany(slug)
   }, [params.id])
 
-  const fetchCompany = async () => {
+  const fetchCompany = async (slug: string) => {
     setLoading(true)
+    setError(null)
     try {
-      const response = await fetch(`/api/companies/${params.id}`)
+      console.log('Company detail page - Fetching company with slug:', slug)
+      const response = await fetch(`/api/companies/${slug}`)
+      console.log('Company detail page - Response status:', response.status)
       const data = await response.json()
-
+      console.log('Company detail page - Full response data:', data)
+      
       if (data.success) {
-        setCompany(data.company)
+        const companyData = data.company
+        console.log('Company detail page - Company data:', {
+          id: companyData.id,
+          name: companyData.name,
+          slug: companyData.slug,
+          rawLogo: companyData.logo,
+          isHttp: companyData.logo?.startsWith('http'),
+          isUploads: companyData.logo?.startsWith('/uploads'),
+          isPlaceholder: !companyData.logo,
+          finalUrl: getLogoUrl(companyData.logo),
+          baseUrl: process.env.NEXT_PUBLIC_BASE_URL || (typeof window !== 'undefined' ? window.location.origin : ''),
+          windowOrigin: typeof window !== 'undefined' ? window.location.origin : 'undefined'
+        })
+        setCompany(companyData)
         setJobs(data.jobs)
       } else {
-        throw new Error(data.message)
+        throw new Error(data.message || "Failed to fetch company details")
       }
     } catch (error: any) {
-      showToast.error(error.message || "Failed to fetch company details")
+      console.error('Company detail page - Error fetching company:', error)
+      setError(error.message || "Failed to fetch company details")
     } finally {
       setLoading(false)
     }
@@ -85,13 +114,13 @@ export default function CompanyPage() {
     )
   }
 
-  if (!company) {
+  if (error || !company) {
     return (
       <div className="container mx-auto px-4 py-8">
         <div className="text-center py-12">
           <h3 className="text-lg font-medium">Company not found</h3>
           <p className="text-muted-foreground">
-            The company you're looking for doesn't exist or has been removed
+            {error || "The company you're looking for doesn't exist or has been removed"}
           </p>
           <Button className="mt-4" asChild>
             <Link href="/companies">Browse Companies</Link>
@@ -107,7 +136,7 @@ export default function CompanyPage() {
         <div className="flex flex-col items-center text-center space-y-4">
           <div className="flex h-32 w-32 items-center justify-center rounded-lg border bg-muted p-2">
             <img
-              src={company.logo}
+              src={getLogoUrl(company.logo)}
               alt={company.name}
               className="h-28 w-28 object-contain"
             />

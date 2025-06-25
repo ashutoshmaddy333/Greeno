@@ -1,9 +1,8 @@
 import { type NextRequest, NextResponse } from "next/server"
 import dbConnect from "@/lib/db"
-import Company from "@/models/Company"
+import Company, { ICompany } from "@/models/Company"
 import Job from "@/models/Job"
 import { authenticateUser, type AuthRequest } from "@/lib/auth"
-import type { ICompany } from "@/models/Company"
 import type { IJob } from "@/models/Job"
 import type { Types } from "mongoose"
 import fs from "fs"
@@ -25,6 +24,12 @@ interface JobDocument extends Omit<IJob, 'company' | 'postedBy'> {
   company: Types.ObjectId
   postedBy: Types.ObjectId
   educationLevel?: string
+}
+
+interface CompanyListItem {
+  _id: Types.ObjectId
+  name: string
+  slug?: string
 }
 
 // Ensure upload directories exist
@@ -51,13 +56,57 @@ export async function GET(
   try {
     await dbConnect()
     const { id } = await context.params
+    console.log('Company API - Looking up company with id/slug:', id)
 
-    // Find company by ID
-    const company = await Company.findById(id)
+    // Try to find company by slug first
+    let company = await Company.findOne({ slug: id })
       .populate("owner", "name email")
       .lean() as unknown as CompanyDocument
 
+    console.log('Company API - Company lookup by slug result:', {
+      found: !!company,
+      id: company?._id?.toString(),
+      name: company?.name,
+      slug: company?.slug,
+      rawLogo: company?.logo,
+      isHttp: company?.logo?.startsWith('http'),
+      isUploads: company?.logo?.startsWith('/uploads'),
+      isPlaceholder: !company?.logo
+    })
+
+    // If not found by slug, try to find by ID only if it looks like a valid ObjectId
+    if (!company && /^[0-9a-fA-F]{24}$/.test(id)) {
+      console.log('Company API - Trying to find by ID:', id)
+      company = await Company.findById(id)
+        .populate("owner", "name email")
+        .lean() as unknown as CompanyDocument
+      
+      console.log('Company API - Company lookup by ID result:', {
+        found: !!company,
+        id: company?._id?.toString(),
+        name: company?.name,
+        slug: company?.slug,
+        rawLogo: company?.logo,
+        isHttp: company?.logo?.startsWith('http'),
+        isUploads: company?.logo?.startsWith('/uploads'),
+        isPlaceholder: !company?.logo
+      })
+    }
+
     if (!company) {
+      // Log all companies to help debug
+      const allCompanies = await Company.find({}, { _id: 1, name: 1, slug: 1, logo: 1 }).lean()
+      console.log('Company API - All companies in DB:', allCompanies.map((c: any) => ({
+        _id: c._id.toString(),
+        name: c.name,
+        slug: c.slug,
+        logo: c.logo,
+        isHttp: c.logo?.startsWith('http'),
+        isUploads: c.logo?.startsWith('/uploads'),
+        isPlaceholder: !c.logo
+      })))
+      
+      console.log('Company API - Company not found for id/slug:', id)
       return NextResponse.json(
         {
           success: false,
@@ -65,6 +114,37 @@ export async function GET(
         },
         { status: 404 }
       )
+    }
+
+    // If company was found by ID but has no slug, generate one
+    if (!company.slug) {
+      console.log('Company API - Generating slug for company:', {
+        _id: company._id.toString(),
+        name: company.name,
+        logo: company.logo
+      })
+      const updatedCompany = await Company.findByIdAndUpdate(
+        company._id,
+        {
+          $set: {
+            slug: company.name
+              .toLowerCase()
+              .replace(/[^a-z0-9]+/g, "-")
+              .replace(/(^-|-$)/g, "")
+          }
+        },
+        { new: true }
+      ).populate("owner", "name email").lean() as unknown as CompanyDocument
+
+      if (updatedCompany) {
+        console.log('Company API - Updated company with slug:', {
+          _id: updatedCompany._id.toString(),
+          name: updatedCompany.name,
+          slug: updatedCompany.slug,
+          logo: updatedCompany.logo
+        })
+        company = updatedCompany
+      }
     }
 
     // Fetch active jobs for this company
@@ -75,6 +155,7 @@ export async function GET(
     const formattedCompany = {
       id: company._id.toString(),
       name: company.name,
+      slug: company.slug,
       logo: company.logo || "/placeholder.svg",
       website: company.website,
       industry: company.industry,
@@ -90,29 +171,41 @@ export async function GET(
       },
     }
 
-    const formattedJobs = jobs.map((job) => ({
-      id: job._id.toString(),
-      title: job.title,
-      type: job.employmentType,
-      location: job.remote ? "Remote" : job.location,
-      salary: `₹${Math.round(job.salary.min / 100000)}L - ₹${Math.round(job.salary.max / 100000)}L`,
-      posted: new Date(job.createdAt).toLocaleDateString(),
-      description: job.description,
-      requirements: job.requirements,
-      benefits: job.benefits,
-      skills: job.skills,
-      remote: job.remote,
-      experienceLevel: job.experienceLevel,
-      educationLevel: job.educationLevel,
-      applicationDeadline: new Date(job.applicationDeadline).toLocaleDateString(),
-      views: job.views,
-      totalApplications: job.applications?.length || 0,
-    }))
+    console.log('Company API - Formatted company data:', {
+      companyId: company._id.toString(),
+      companyName: company.name,
+      rawLogo: company.logo,
+      formattedLogo: formattedCompany.logo,
+      isHttp: company.logo?.startsWith('http'),
+      isUploads: company.logo?.startsWith('/uploads'),
+      isPlaceholder: !company.logo,
+      finalUrl: company.logo?.startsWith('http') ? company.logo : 
+                company.logo?.startsWith('/uploads') ? `${process.env.NEXT_PUBLIC_BASE_URL || ''}${company.logo}` : 
+                company.logo || "/placeholder.svg",
+      baseUrl: process.env.NEXT_PUBLIC_BASE_URL
+    })
 
     return NextResponse.json({
       success: true,
       company: formattedCompany,
-      jobs: formattedJobs,
+      jobs: jobs.map((job) => ({
+        id: job._id.toString(),
+        title: job.title,
+        type: job.employmentType,
+        location: job.remote ? "Remote" : job.location,
+        salary: `₹${Math.round(job.salary.min / 100000)}L - ₹${Math.round(job.salary.max / 100000)}L`,
+        posted: new Date(job.createdAt).toLocaleDateString(),
+        description: job.description,
+        requirements: job.requirements,
+        benefits: job.benefits,
+        skills: job.skills,
+        remote: job.remote,
+        experienceLevel: job.experienceLevel,
+        educationLevel: job.educationLevel,
+        applicationDeadline: new Date(job.applicationDeadline).toLocaleDateString(),
+        views: job.views,
+        totalApplications: job.applications?.length || 0,
+      }))
     })
   } catch (error: any) {
     console.error("Error fetching company:", error)
@@ -299,7 +392,7 @@ async function saveLogoFile(file: File): Promise<string> {
   }
 }
 
-// Update company logo
+// Update company details
 export async function PATCH(
   request: Request,
   context: { params: Promise<{ id: string }> }
@@ -318,20 +411,24 @@ export async function PATCH(
 
     if (user.role !== "employer") {
       return NextResponse.json(
-        { message: "Only employers can update company logos" },
+        { message: "Only employers can update company details" },
         { status: 403 }
       )
     }
 
-    const formData = await (request as any).formData()
-    const logoFile = formData.get("logo") as File | null
-
-    if (!logoFile) {
+    // Get the content type from the request
+    const contentType = request.headers.get("content-type") || ""
+    
+    // Handle JSON data for company details update
+    if (!contentType.includes("application/json")) {
       return NextResponse.json(
-        { message: "No logo file provided" },
+        { message: "Content type must be application/json" },
         { status: 400 }
       )
     }
+
+    // Parse the JSON body
+    const companyData = await request.json()
 
     // Find company (only if user owns it)
     const company = await Company.findOne({ _id: id, owner: user._id })
@@ -343,34 +440,40 @@ export async function PATCH(
       )
     }
 
-    try {
-      const logoPath = await saveLogoFile(logoFile)
-      
-      // Delete old logo if exists
-      if (company.logo) {
-        const oldLogoPath = path.join(process.cwd(), "public", company.logo)
-        if (fs.existsSync(oldLogoPath)) {
-          fs.unlinkSync(oldLogoPath)
-        }
-      }
-      
-      // Update company with new logo
-      company.logo = logoPath
-      await company.save()
+    // Update company fields
+    const allowedFields = [
+      "name",
+      "description",
+      "industry",
+      "website",
+      "location",
+      "size",
+      "founded",
+      "logo"
+    ]
 
-      return NextResponse.json({ 
-        success: true,
-        company,
-        message: "Company logo updated successfully" 
-      })
-    } catch (error: any) {
-      return NextResponse.json(
-        { message: error.message },
-        { status: 400 }
-      )
+    // Only update allowed fields
+    for (const field of allowedFields) {
+      if (field in companyData) {
+        company[field] = companyData[field]
+      }
     }
+
+    // Save the updated company
+    await company.save()
+
+    console.log("Company details updated successfully:", {
+      companyId: company._id,
+      updatedFields: Object.keys(companyData)
+    })
+
+    return NextResponse.json({ 
+      success: true,
+      company,
+      message: "Company details updated successfully" 
+    })
   } catch (error: any) {
-    console.error("Update company logo error:", error)
+    console.error("Update company details error:", error)
     return NextResponse.json(
       { message: error.message || "Server error" },
       { status: 500 }

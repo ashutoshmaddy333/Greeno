@@ -14,7 +14,7 @@ export default function JobAlertsSection() {
                 <Bell className="h-6 w-6" />
               </div>
               <CardTitle className="mt-4 text-2xl font-bold md:text-3xl">Never Miss a Job Opportunity</CardTitle>
-              <CardDescription className="text-primary-foreground/90">
+              <CardDescription className="text-primary-foreground/90">x
                 Get personalized job alerts delivered straight to your inbox
               </CardDescription>
             </CardHeader>
@@ -48,12 +48,25 @@ export default function JobAlertsSection() {
             </CardContent>
           </div>
           <div className="hidden md:block">
-            <div className="h-full w-full overflow-hidden">
-              <img
-                src="/placeholder.svg?height=400&width=500&text=Job+Alerts"
-                alt="Job alerts illustration"
-                className="h-full w-full object-cover"
-              />
+            <div className="relative overflow-hidden rounded-2xl bg-background shadow-lg transition-all duration-500 hover:shadow-xl mx-4 my-6">
+              {/* Decorative border */}
+              <div className="absolute inset-0 border-2 border-primary/20 rounded-2xl transition-colors duration-300 hover:border-primary/40" />
+              
+              {/* Image container with hover effects */}
+              <div className="relative overflow-hidden">
+                <img
+                  src="/new.jpg?height=400&width=500&text=Job+Alerts"
+                  alt="Job alerts illustration"
+                  className="w-full h-auto object-contain transition-all duration-700 hover:scale-105"
+                />
+                
+                {/* Gradient overlay on hover */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent opacity-0 transition-opacity duration-500 hover:opacity-100" />
+                
+                {/* Decorative corner accents */}
+                <div className="absolute top-0 left-0 h-16 w-16 -translate-x-8 -translate-y-8 rotate-45 bg-primary/20 blur-xl transition-all duration-500 hover:bg-primary/30" />
+                <div className="absolute bottom-0 right-0 h-16 w-16 translate-x-8 translate-y-8 rotate-45 bg-primary/20 blur-xl transition-all duration-500 hover:bg-primary/30" />
+              </div>
             </div>
           </div>
         </div>

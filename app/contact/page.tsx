@@ -55,7 +55,7 @@ export default function ContactPage() {
 
   if (isSubmitted) {
     return (
-      <div className="container mx-auto px-4 py-16">
+      <div className="container mx-auto px-2 sm:px-4 py-12 sm:py-16">
         <div className="max-w-2xl mx-auto text-center">
           <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-6">
             <CheckCircle className="h-8 w-8 text-primary" />
@@ -71,17 +71,17 @@ export default function ContactPage() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-16">
+    <div className="container mx-auto px-2 sm:px-4 py-12 sm:py-16">
       <div className="max-w-4xl mx-auto">
-        <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold mb-4">Contact Us</h1>
-          <p className="text-muted-foreground max-w-2xl mx-auto">
+        <div className="text-center mb-8 sm:mb-12">
+          <h1 className="text-3xl sm:text-4xl font-bold mb-4">Contact Us</h1>
+          <p className="text-muted-foreground max-w-full sm:max-w-2xl mx-auto text-base sm:text-lg">
             Have questions or need assistance? We're here to help! Fill out the form below and we'll get back to you as
             soon as possible.
           </p>
         </div>
 
-        <div className="grid gap-8 md:grid-cols-2">
+        <div className="grid gap-8 sm:gap-10 md:grid-cols-2">
           {/* Contact Information */}
           <div className="space-y-6">
             <Card>
@@ -90,7 +90,7 @@ export default function ContactPage() {
                 <CardDescription>Choose your preferred way to reach us</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="flex items-start space-x-4">
+                <div className="flex items-start gap-3 sm:gap-4">
                   <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
                     <Mail className="h-5 w-5 text-primary" />
                   </div>
@@ -100,7 +100,7 @@ export default function ContactPage() {
                     <p className="text-sm text-muted-foreground">md@greenotechjobs.com</p>
                   </div>
                 </div>
-                <div className="flex items-start space-x-4">
+                <div className="flex items-start gap-3 sm:gap-4">
                   <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
                     <Phone className="h-5 w-5 text-primary" />
                   </div>
@@ -110,7 +110,7 @@ export default function ContactPage() {
                     <p className="text-sm text-muted-foreground">+91 74288-26681</p>
                   </div>
                 </div>
-                <div className="flex items-start space-x-4">
+                <div className="flex items-start gap-3 sm:gap-4">
                   <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
                     <MapPin className="h-5 w-5 text-primary" />
                   </div>
@@ -125,13 +125,13 @@ export default function ContactPage() {
                     </p>
                   </div>
                 </div>
-                <div className="flex items-start space-x-4">
+                <div className="flex items-start gap-3 sm:gap-4">
                   <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
                     <Globe className="h-5 w-5 text-primary" />
                   </div>
                   <div>
                     <h3 className="font-medium">Follow Us</h3>
-                    <div className="flex gap-3 mt-2">
+                    <div className="flex gap-2 sm:gap-3 mt-2">
                       <a
                         href="https://x.com/GreenotechJobs?t=flhULKxmhILuXzw81RhJxw&s=09"
                         target="_blank"
@@ -181,15 +181,15 @@ export default function ContactPage() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-2">
-                  <div className="flex justify-between">
+                  <div className="flex flex-col sm:flex-row sm:justify-between">
                     <span className="text-muted-foreground">Monday - Friday</span>
                     <span className="font-medium">9:00 AM - 6:00 PM</span>
                   </div>
-                  <div className="flex justify-between">
+                  <div className="flex flex-col sm:flex-row sm:justify-between">
                     <span className="text-muted-foreground">Saturday</span>
                     <span className="font-medium">10:00 AM - 4:00 PM</span>
                   </div>
-                  <div className="flex justify-between">
+                  <div className="flex flex-col sm:flex-row sm:justify-between">
                     <span className="text-muted-foreground">Sunday</span>
                     <span className="font-medium">Closed</span>
                   </div>
@@ -199,7 +199,7 @@ export default function ContactPage() {
           </div>
 
           {/* Contact Form */}
-          <Card>
+          <Card className="mt-8 md:mt-0">
             <CardHeader>
               <CardTitle>Send us a Message</CardTitle>
               <CardDescription>Fill out the form below and we'll get back to you</CardDescription>
@@ -215,6 +215,7 @@ export default function ContactPage() {
                     onChange={handleInputChange}
                     placeholder="Enter your full name"
                     required
+                    className="w-full"
                   />
                 </div>
 
@@ -228,6 +229,7 @@ export default function ContactPage() {
                     onChange={handleInputChange}
                     placeholder="Enter your email address"
                     required
+                    className="w-full"
                   />
                 </div>
 
@@ -240,13 +242,14 @@ export default function ContactPage() {
                     value={formData.phone}
                     onChange={handleInputChange}
                     placeholder="Enter your phone number"
+                    className="w-full"
                   />
                 </div>
 
                 <div className="space-y-2">
                   <Label htmlFor="subject">Subject</Label>
                   <Select value={formData.subject} onValueChange={handleSelectChange}>
-                    <SelectTrigger>
+                    <SelectTrigger className="w-full">
                       <SelectValue placeholder="Select a subject" />
                     </SelectTrigger>
                     <SelectContent>
@@ -269,6 +272,7 @@ export default function ContactPage() {
                     placeholder="Enter your message"
                     rows={5}
                     required
+                    className="w-full"
                   />
                 </div>
 

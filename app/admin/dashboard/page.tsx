@@ -104,12 +104,12 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="space-y-6">
-      <h1 className="text-3xl font-bold">Dashboard Overview</h1>
+    <div className="space-y-6 px-2 sm:px-4 py-4">
+      <h1 className="text-2xl sm:text-3xl font-bold">Dashboard Overview</h1>
 
       {/* Stats Cards */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card>
+      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 w-full">
+        <Card className="w-full">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Users</CardTitle>
             <Users className="h-4 w-4 text-muted-foreground" />
@@ -122,7 +122,7 @@ export default function AdminDashboard() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="w-full">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Jobs</CardTitle>
             <Briefcase className="h-4 w-4 text-muted-foreground" />
@@ -135,7 +135,7 @@ export default function AdminDashboard() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="w-full">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Applications</CardTitle>
             <FileText className="h-4 w-4 text-muted-foreground" />
@@ -148,7 +148,7 @@ export default function AdminDashboard() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="w-full">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Employers</CardTitle>
             <Building2 className="h-4 w-4 text-muted-foreground" />
@@ -163,12 +163,12 @@ export default function AdminDashboard() {
       </div>
 
       {/* User Stats */}
-      <Card>
+      <Card className="w-full">
         <CardHeader>
           <CardTitle>User Statistics</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
             <div className="flex items-center space-x-2">
               <Users className="h-4 w-4 text-muted-foreground" />
               <div>
@@ -202,27 +202,27 @@ export default function AdminDashboard() {
       </Card>
 
       {/* Recent Activity Tabs */}
-      <Tabs defaultValue="users" className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="users">Recent Users</TabsTrigger>
-          <TabsTrigger value="jobs">Recent Jobs</TabsTrigger>
-          <TabsTrigger value="applications">Recent Applications</TabsTrigger>
+      <Tabs defaultValue="users" className="space-y-4 w-full">
+        <TabsList className="w-full flex flex-col sm:flex-row gap-2 sm:gap-4 mb-4">
+          <TabsTrigger value="users" className="flex-1">Recent Users</TabsTrigger>
+          <TabsTrigger value="jobs" className="flex-1">Recent Jobs</TabsTrigger>
+          <TabsTrigger value="applications" className="flex-1">Recent Applications</TabsTrigger>
         </TabsList>
 
         <TabsContent value="users" className="space-y-4">
-          <Card>
+          <Card className="w-full">
             <CardHeader>
               <CardTitle>Recent Users</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
                 {stats.recentUsers.map((user) => (
-                  <div key={user._id} className="flex items-center justify-between">
+                  <div key={user._id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-2 rounded-md bg-muted/30">
                     <div>
                       <p className="font-medium">{user.name}</p>
                       <p className="text-sm text-muted-foreground">{user.email}</p>
                     </div>
-                    <div className="text-sm text-muted-foreground">
+                    <div className="text-sm text-muted-foreground text-right sm:text-left">
                       <p className="capitalize">{user.role}</p>
                       <p>{new Date(user.createdAt).toLocaleDateString()}</p>
                     </div>
@@ -234,19 +234,19 @@ export default function AdminDashboard() {
         </TabsContent>
 
         <TabsContent value="jobs" className="space-y-4">
-          <Card>
+          <Card className="w-full">
             <CardHeader>
               <CardTitle>Recent Jobs</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
                 {stats.recentJobs.map((job) => (
-                  <div key={job._id} className="flex items-center justify-between">
+                  <div key={job._id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-2 rounded-md bg-muted/30">
                     <div>
                       <p className="font-medium">{job.title}</p>
                       <p className="text-sm text-muted-foreground">{job.company.name}</p>
                     </div>
-                    <div className="text-sm text-muted-foreground">
+                    <div className="text-sm text-muted-foreground text-right sm:text-left">
                       <p>{job.applications} applications</p>
                       <p>{new Date(job.createdAt).toLocaleDateString()}</p>
                     </div>
@@ -258,21 +258,21 @@ export default function AdminDashboard() {
         </TabsContent>
 
         <TabsContent value="applications" className="space-y-4">
-          <Card>
+          <Card className="w-full">
             <CardHeader>
               <CardTitle>Recent Applications</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
                 {stats.recentApplications.map((application) => (
-                  <div key={application._id} className="flex items-center justify-between">
+                  <div key={application._id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-2 rounded-md bg-muted/30">
                     <div>
                       <p className="font-medium">{application.job.title}</p>
                       <p className="text-sm text-muted-foreground">
                         {application.applicant.name} • {application.job.company.name}
                       </p>
                     </div>
-                    <div className="text-sm text-muted-foreground">
+                    <div className="text-sm text-muted-foreground text-right sm:text-left">
                       <p className="capitalize">{application.status}</p>
                       <p>{new Date(application.createdAt).toLocaleDateString()}</p>
                     </div>

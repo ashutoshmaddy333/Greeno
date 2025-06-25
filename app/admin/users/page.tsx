@@ -195,7 +195,7 @@ export default function UsersPage() {
   }
 
   return (
-    <div className="container mx-auto py-8 space-y-6">
+    <div className="container mx-auto py-8 space-y-6 px-2 sm:px-4">
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">User Management</h1>
@@ -243,170 +243,172 @@ export default function UsersPage() {
         </CardHeader>
         <CardContent className="p-0">
           <div className="rounded-md border">
-            <Table>
-              <TableHeader>
-                <TableRow className="bg-muted/50">
-                  <TableHead className="w-[30%]">
-                    <div className="flex items-center gap-2">
-                      <User className="h-4 w-4" />
-                      User
-                    </div>
-                  </TableHead>
-                  <TableHead className="w-[20%]">
-                    <div className="flex items-center gap-2">
-                      <Mail className="h-4 w-4" />
-                      Email
-                    </div>
-                  </TableHead>
-                  <TableHead className="w-[15%]">
-                    <div className="flex items-center gap-2">
-                      <Shield className="h-4 w-4" />
-                      Role
-                    </div>
-                  </TableHead>
-                  <TableHead className="w-[15%]">Status</TableHead>
-                  <TableHead className="w-[10%]">
-                    <div className="flex items-center gap-2">
-                      <Calendar className="h-4 w-4" />
-                      Joined
-                    </div>
-                  </TableHead>
-                  <TableHead className="w-[100px]">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {loading ? (
-                  <TableRow>
-                    <TableCell colSpan={6} className="h-24 text-center">
-                      <div className="flex flex-col items-center justify-center gap-2">
-                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
-                        <p className="text-sm text-muted-foreground">Loading users...</p>
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-muted/50">
+                    <TableHead className="w-[30%]">
+                      <div className="flex items-center gap-2">
+                        <User className="h-4 w-4" />
+                        User
                       </div>
-                    </TableCell>
-                  </TableRow>
-                ) : users.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={6} className="h-24 text-center">
-                      <div className="flex flex-col items-center justify-center gap-2">
-                        <User className="h-8 w-8 text-muted-foreground" />
-                        <p className="text-sm text-muted-foreground">No users found</p>
+                    </TableHead>
+                    <TableHead className="w-[20%]">
+                      <div className="flex items-center gap-2">
+                        <Mail className="h-4 w-4" />
+                        Email
                       </div>
-                    </TableCell>
+                    </TableHead>
+                    <TableHead className="w-[15%]">
+                      <div className="flex items-center gap-2">
+                        <Shield className="h-4 w-4" />
+                        Role
+                      </div>
+                    </TableHead>
+                    <TableHead className="w-[15%]">Status</TableHead>
+                    <TableHead className="w-[10%]">
+                      <div className="flex items-center gap-2">
+                        <Calendar className="h-4 w-4" />
+                        Joined
+                      </div>
+                    </TableHead>
+                    <TableHead className="w-[100px]">Actions</TableHead>
                   </TableRow>
-                ) : (
-                  users.map((user) => (
-                    <TableRow key={user._id} className="group">
-                      <TableCell>
-                        <div className="flex flex-col">
-                          <span className="font-medium group-hover:text-primary transition-colors">
-                            {user.name}
-                          </span>
+                </TableHeader>
+                <TableBody>
+                  {loading ? (
+                    <TableRow>
+                      <TableCell colSpan={6} className="h-24 text-center">
+                        <div className="flex flex-col items-center justify-center gap-2">
+                          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+                          <p className="text-sm text-muted-foreground">Loading users...</p>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ) : users.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={6} className="h-24 text-center">
+                        <div className="flex flex-col items-center justify-center gap-2">
+                          <User className="h-8 w-8 text-muted-foreground" />
+                          <p className="text-sm text-muted-foreground">No users found</p>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    users.map((user) => (
+                      <TableRow key={user._id} className="group">
+                        <TableCell>
+                          <div className="flex flex-col">
+                            <span className="font-medium group-hover:text-primary transition-colors">
+                              {user.name}
+                            </span>
+                            <span className="text-sm text-muted-foreground">
+                              {user.email}
+                            </span>
+                          </div>
+                        </TableCell>
+                        <TableCell>
                           <span className="text-sm text-muted-foreground">
                             {user.email}
                           </span>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <span className="text-sm text-muted-foreground">
-                          {user.email}
-                        </span>
-                      </TableCell>
-                      <TableCell>
-                        <Badge
-                          variant="secondary"
-                          className={`${getRoleColor(user.role)} capitalize`}
-                        >
-                          {user.role}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex flex-col gap-1">
+                        </TableCell>
+                        <TableCell>
                           <Badge
                             variant="secondary"
-                            className={user.isEmailVerified
-                              ? "bg-green-500/10 text-green-500 dark:bg-green-500/20 dark:text-green-400"
-                              : "bg-yellow-500/10 text-yellow-500 dark:bg-yellow-500/20 dark:text-yellow-400"
-                            }
+                            className={`${getRoleColor(user.role)} capitalize`}
                           >
-                            {user.isEmailVerified ? "Email Verified" : "Email Unverified"}
+                            {user.role}
                           </Badge>
-                          <Badge
-                            variant="secondary"
-                            className={user.isVerified
-                              ? "bg-green-500/10 text-green-500 dark:bg-green-500/20 dark:text-green-400"
-                              : "bg-yellow-500/10 text-yellow-500 dark:bg-yellow-500/20 dark:text-yellow-400"
-                            }
-                          >
-                            {user.isVerified ? "Verified" : "Unverified"}
-                          </Badge>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <span className="text-sm text-muted-foreground">
-                          {format(new Date(user.createdAt), "MMM d, yyyy")}
-                        </span>
-                      </TableCell>
-                      <TableCell>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button
-                              variant="ghost"
-                              className="h-8 w-8 p-0 hover:bg-muted"
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex flex-col gap-1">
+                            <Badge
+                              variant="secondary"
+                              className={user.isEmailVerified
+                                ? "bg-green-500/10 text-green-500 dark:bg-green-500/20 dark:text-green-400"
+                                : "bg-yellow-500/10 text-yellow-500 dark:bg-yellow-500/20 dark:text-yellow-400"
+                              }
                             >
-                              <span className="sr-only">Open menu</span>
-                              <MoreHorizontal className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end" className="w-[200px]">
-                            <DropdownMenuItem
-                              onClick={() => {
-                                setSelectedUser(user)
-                                setShowDetails(true)
-                              }}
+                              {user.isEmailVerified ? "Email Verified" : "Email Unverified"}
+                            </Badge>
+                            <Badge
+                              variant="secondary"
+                              className={user.isVerified
+                                ? "bg-green-500/10 text-green-500 dark:bg-green-500/20 dark:text-green-400"
+                                : "bg-yellow-500/10 text-yellow-500 dark:bg-yellow-500/20 dark:text-yellow-400"
+                              }
                             >
-                              <Eye className="h-4 w-4 mr-2" />
-                              View Details
-                            </DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem
-                              onClick={() => handleUpdateRole(user._id, "admin")}
-                              disabled={user.role === "admin"}
-                            >
-                              Make Admin
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              onClick={() => handleUpdateRole(user._id, "employer")}
-                              disabled={user.role === "employer"}
-                            >
-                              Make Employer
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              onClick={() => handleUpdateRole(user._id, "jobseeker")}
-                              disabled={user.role === "jobseeker"}
-                            >
-                              Make Job Seeker
-                            </DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem
-                              onClick={() => handleUpdateVerification(user._id, !user.isVerified)}
-                            >
-                              {user.isVerified ? "Unverify User" : "Verify User"}
-                            </DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem
-                              className="text-destructive focus:text-destructive"
-                              onClick={() => handleDeleteUser(user._id)}
-                            >
-                              Delete User
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
+                              {user.isVerified ? "Verified" : "Unverified"}
+                            </Badge>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <span className="text-sm text-muted-foreground">
+                            {format(new Date(user.createdAt), "MMM d, yyyy")}
+                          </span>
+                        </TableCell>
+                        <TableCell>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                className="h-8 w-8 p-0 hover:bg-muted"
+                              >
+                                <span className="sr-only">Open menu</span>
+                                <MoreHorizontal className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="w-[200px]">
+                              <DropdownMenuItem
+                                onClick={() => {
+                                  setSelectedUser(user)
+                                  setShowDetails(true)
+                                }}
+                              >
+                                <Eye className="h-4 w-4 mr-2" />
+                                View Details
+                              </DropdownMenuItem>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem
+                                onClick={() => handleUpdateRole(user._id, "admin")}
+                                disabled={user.role === "admin"}
+                              >
+                                Make Admin
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onClick={() => handleUpdateRole(user._id, "employer")}
+                                disabled={user.role === "employer"}
+                              >
+                                Make Employer
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onClick={() => handleUpdateRole(user._id, "jobseeker")}
+                                disabled={user.role === "jobseeker"}
+                              >
+                                Make Job Seeker
+                              </DropdownMenuItem>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem
+                                onClick={() => handleUpdateVerification(user._id, !user.isVerified)}
+                              >
+                                {user.isVerified ? "Unverify User" : "Verify User"}
+                              </DropdownMenuItem>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem
+                                className="text-destructive focus:text-destructive"
+                                onClick={() => handleDeleteUser(user._id)}
+                              >
+                                Delete User
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </div>
           </div>
         </CardContent>
       </Card>

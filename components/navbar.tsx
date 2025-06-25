@@ -23,7 +23,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import { Menu, X, User, LogOut, Settings, BriefcaseIcon } from "lucide-react"
-import { cn } from "@/lib/utils"
+import { cn, getLogoUrl, getLogoDimensions } from "@/lib/utils"
 import { useAuth } from "@/contexts/auth-context"
 
 export function Navbar() {
@@ -33,6 +33,8 @@ export function Navbar() {
   const [lastUpdate, setLastUpdate] = useState(Date.now())
   const pathname = usePathname()
   const { isAuthenticated, isEmployer, user, logout } = useAuth()
+
+  const { width, height } = getLogoDimensions('navbar')
 
   useEffect(() => {
     const handleScroll = () => {
@@ -49,6 +51,25 @@ export function Navbar() {
     }
   }, [])
 
+  const getProfilePictureUrl = (path: string | undefined) => {
+    if (!path) return "/placeholder.svg"
+    
+    // If it's already a full URL, return as is
+    if (path.startsWith('http')) {
+      return path
+    }
+    
+    // If it's a relative path starting with /uploads, make it absolute
+    if (path.startsWith('/uploads')) {
+      // Get the current origin (protocol + hostname + port)
+      const origin = typeof window !== 'undefined' ? window.location.origin : ''
+      return `${origin}${path}`
+    }
+    
+    // For any other case, return the path as is
+    return path
+  }
+
   useEffect(() => {
     const fetchProfilePicture = async () => {
       if (isAuthenticated && user) {
@@ -58,7 +79,8 @@ export function Navbar() {
             const response = await fetch("/api/employer/profile")
             const data = await response.json()
             if (response.ok && data.company?.logo) {
-              setProfilePicture(data.company.logo)
+              const logoUrl = getProfilePictureUrl(data.company.logo)
+              setProfilePicture(logoUrl)
               setLastUpdate(Date.now())
             }
           } else {
@@ -66,7 +88,8 @@ export function Navbar() {
             const response = await fetch("/api/profile")
             const data = await response.json()
             if (response.ok && data.profilePicture) {
-              setProfilePicture(data.profilePicture)
+              const pictureUrl = getProfilePictureUrl(data.profilePicture)
+              setProfilePicture(pictureUrl)
               setLastUpdate(Date.now())
             }
           }
@@ -77,10 +100,8 @@ export function Navbar() {
     }
 
     fetchProfilePicture()
-
     // Set up an interval to refresh the profile picture every 30 seconds
     const interval = setInterval(fetchProfilePicture, 30000)
-
     return () => clearInterval(interval)
   }, [isAuthenticated, isEmployer, user])
 
@@ -113,16 +134,16 @@ export function Navbar() {
         scrolled ? "bg-background/80 backdrop-blur-md shadow-sm" : "bg-background",
       )}
     >
-      <div className="container mx-auto flex h-16 items-center justify-between px-4">
+      <div className="container mx-auto flex h-16 items-center justify-between px-4 sm:px-6">
         <div className="flex items-center">
           <Link href="/" className="flex items-center space-x-2">
-            <BriefcaseIcon className="h-6 w-6 text-primary" />
-            <span className="text-xl font-bold">GreenoTechJobs</span>
+            <BriefcaseIcon className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
+            <span className="text-lg sm:text-xl font-bold">GreenoTechJobs</span>
           </Link>
         </div>
 
         {/* Desktop Navigation */}
-        <div className="hidden md:flex md:items-center md:space-x-4">
+        <div className="hidden lg:flex lg:items-center lg:space-x-4">
           <NavigationMenu>
             <NavigationMenuList>
               {navItems.map((item) => (
@@ -146,7 +167,7 @@ export function Navbar() {
           </NavigationMenu>
         </div>
 
-        <div className="flex items-center space-x-4">
+        <div className="flex items-center space-x-2 sm:space-x-4">
           <ModeToggle />
 
           {isAuthenticated ? (
@@ -158,7 +179,7 @@ export function Navbar() {
                       src={profilePicture ? `${profilePicture}?t=${lastUpdate}` : "/placeholder.svg"} 
                       alt={user?.name || "User"} 
                     />
-                    <AvatarFallback>{user?.name?.charAt(0) || "U"}</AvatarFallback>
+                    <AvatarFallback>{isEmployer ? (user?.name?.charAt(0) || "U") : "A"}</AvatarFallback>
                   </Avatar>
                 </Button>
               </DropdownMenuTrigger>
@@ -179,9 +200,9 @@ export function Navbar() {
                   </DropdownMenuItem>
                 ) : (
                   <DropdownMenuItem asChild>
-                    <Link href="/profile">
+                    <Link href="/admin/dashboard">
                       <User className="mr-2 h-4 w-4" />
-                      <span>Job Seeker Profile</span>
+                      <span>Admin Dashboard</span>
                     </Link>
                   </DropdownMenuItem>
                 )}
@@ -193,7 +214,7 @@ export function Navbar() {
               </DropdownMenuContent>
             </DropdownMenu>
           ) : (
-            <div className="flex items-center space-x-2">
+            <div className="hidden lg:flex items-center space-x-2">
               <Button variant="ghost" asChild>
                 <Link href="/login">Sign in</Link>
               </Button>
@@ -205,19 +226,19 @@ export function Navbar() {
 
           {/* Mobile Menu Button */}
           <Sheet open={isOpen} onOpenChange={setIsOpen}>
-            <SheetTrigger asChild className="md:hidden">
-              <Button variant="ghost" size="icon" onClick={toggleMenu}>
-                {isOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            <SheetTrigger asChild className="lg:hidden">
+              <Button variant="ghost" size="icon" onClick={toggleMenu} className="h-8 w-8 sm:h-9 sm:w-9">
+                {isOpen ? <X className="h-4 w-4 sm:h-5 sm:w-5" /> : <Menu className="h-4 w-4 sm:h-5 sm:w-5" />}
               </Button>
             </SheetTrigger>
-            <SheetContent side="right" className="w-[300px] sm:w-[400px]">
-              <nav className="flex flex-col gap-4">
+            <SheetContent side="right" className="w-[280px] sm:w-[320px] p-4">
+              <nav className="flex flex-col gap-4 mt-4">
                 {navItems.map((item) => (
                   <Link
                     key={item.name}
                     href={item.href}
                     className={cn(
-                      "flex items-center py-2 text-lg font-medium transition-colors",
+                      "flex items-center py-2 text-base sm:text-lg font-medium transition-colors",
                       pathname === item.href ? "text-primary" : "text-foreground/70 hover:text-foreground",
                     )}
                     onClick={closeMenu}
@@ -228,16 +249,17 @@ export function Navbar() {
                 <div className="mt-4 flex flex-col gap-2">
                   {!isAuthenticated ? (
                     <>
-                      <Button asChild variant="outline" onClick={closeMenu}>
+                      <Button asChild variant="outline" className="w-full" onClick={closeMenu}>
                         <Link href="/login">Sign in</Link>
                       </Button>
-                      <Button asChild onClick={closeMenu}>
+                      <Button asChild className="w-full" onClick={closeMenu}>
                         <Link href="/signup">Sign up</Link>
                       </Button>
                     </>
                   ) : (
                     <Button
                       variant="outline"
+                      className="w-full"
                       onClick={() => {
                         logout()
                         closeMenu()

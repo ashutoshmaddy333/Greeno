@@ -30,6 +30,7 @@ import { Badge } from "@/components/ui/badge"
 import { toast } from "sonner"
 import { format } from "date-fns"
 import { MoreHorizontal, Search } from "lucide-react"
+import { CardContent } from "@/components/ui/card"
 
 interface Job {
   _id: string
@@ -159,7 +160,7 @@ export default function AdminJobs() {
   }
 
   return (
-    <div className="container mx-auto py-8 space-y-6">
+    <div className="container mx-auto py-8 space-y-6 px-2 sm:px-4">
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Job Management</h1>
@@ -200,126 +201,128 @@ export default function AdminJobs() {
         </div>
       </div>
 
-      <div className="rounded-md border bg-card">
-        <Table>
-          <TableHeader>
-            <TableRow className="bg-muted/50">
-              <TableHead>Title</TableHead>
-              <TableHead>Company</TableHead>
-              <TableHead>Location</TableHead>
-              <TableHead>Type</TableHead>
-              <TableHead>Salary</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Stats</TableHead>
-              <TableHead>Created</TableHead>
-              <TableHead className="w-[100px]">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {loading ? (
-              <TableRow>
-                <TableCell colSpan={9} className="text-center py-8">
-                  <div className="flex justify-center">
-                    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary" />
-                  </div>
-                </TableCell>
+      <CardContent>
+        <div className="overflow-x-auto">
+          <Table>
+            <TableHeader>
+              <TableRow className="bg-muted/50">
+                <TableHead>Title</TableHead>
+                <TableHead>Company</TableHead>
+                <TableHead>Location</TableHead>
+                <TableHead>Type</TableHead>
+                <TableHead>Salary</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Stats</TableHead>
+                <TableHead>Created</TableHead>
+                <TableHead className="w-[100px]">Actions</TableHead>
               </TableRow>
-            ) : jobs.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
-                  No jobs found
-                </TableCell>
-              </TableRow>
-            ) : (
-              jobs.map((job) => (
-                <TableRow key={job._id} className="group">
-                  <TableCell className="font-medium">
-                    <div className="flex flex-col">
-                      <span className="font-semibold group-hover:text-primary transition-colors">
-                        {job.title}
-                      </span>
-                      <span className="text-sm text-muted-foreground">
-                        {job.company.name}
-                      </span>
+            </TableHeader>
+            <TableBody>
+              {loading ? (
+                <TableRow>
+                  <TableCell colSpan={9} className="text-center py-8">
+                    <div className="flex justify-center">
+                      <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary" />
                     </div>
-                  </TableCell>
-                  <TableCell>
-                    <span className="text-sm">{job.company.name}</span>
-                  </TableCell>
-                  <TableCell>
-                    <span className="text-sm">{job.location}</span>
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant="outline" className="capitalize bg-background">
-                      {job.type ? job.type.replace("-", " ") : "N/A"}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <span className="text-sm">
-                      {job.salary.currency} {job.salary.min.toLocaleString()} -{" "}
-                      {job.salary.max.toLocaleString()}
-                    </span>
-                  </TableCell>
-                  <TableCell>
-                    <Badge
-                      variant={job.isActive ? "default" : "secondary"}
-                      className={job.isActive ? "bg-green-500/10 text-green-500 dark:bg-green-500/20 dark:text-green-400" : "bg-gray-500/10 text-gray-500 dark:bg-gray-500/20 dark:text-gray-400"}
-                    >
-                      {job.isActive ? "Active" : "Inactive"}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <div className="space-y-1">
-                      <p className="text-sm text-muted-foreground">Views: {job.views}</p>
-                      <p className="text-sm text-muted-foreground">
-                        Applications: {job.applications}
-                      </p>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <span className="text-sm text-muted-foreground">
-                      {format(new Date(job.createdAt), "MMM d, yyyy")}
-                    </span>
-                  </TableCell>
-                  <TableCell>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          className="h-8 w-8 p-0 hover:bg-muted"
-                        >
-                          <span className="sr-only">Open menu</span>
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="bg-background">
-                        <DropdownMenuItem
-                          onClick={() =>
-                            handleUpdateJob(job._id, {
-                              isActive: !job.isActive,
-                            })
-                          }
-                          className="cursor-pointer"
-                        >
-                          {job.isActive
-                            ? "Mark as inactive"
-                            : "Mark as active"}
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          className="text-destructive cursor-pointer"
-                          onClick={() => handleDeleteJob(job._id)}
-                        >
-                          Delete job
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
                   </TableCell>
                 </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
-      </div>
+              ) : jobs.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
+                    No jobs found
+                  </TableCell>
+                </TableRow>
+              ) : (
+                jobs.map((job) => (
+                  <TableRow key={job._id} className="group">
+                    <TableCell className="font-medium">
+                      <div className="flex flex-col">
+                        <span className="font-semibold group-hover:text-primary transition-colors">
+                          {job.title}
+                        </span>
+                        <span className="text-sm text-muted-foreground">
+                          {job.company.name}
+                        </span>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <span className="text-sm">{job.company.name}</span>
+                    </TableCell>
+                    <TableCell>
+                      <span className="text-sm">{job.location}</span>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant="outline" className="capitalize bg-background">
+                        {job.type ? job.type.replace("-", " ") : "N/A"}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <span className="text-sm">
+                        {job.salary.currency} {job.salary.min.toLocaleString()} -{" "}
+                        {job.salary.max.toLocaleString()}
+                      </span>
+                    </TableCell>
+                    <TableCell>
+                      <Badge
+                        variant={job.isActive ? "default" : "secondary"}
+                        className={job.isActive ? "bg-green-500/10 text-green-500 dark:bg-green-500/20 dark:text-green-400" : "bg-gray-500/10 text-gray-500 dark:bg-gray-500/20 dark:text-gray-400"}
+                      >
+                        {job.isActive ? "Active" : "Inactive"}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <div className="space-y-1">
+                        <p className="text-sm text-muted-foreground">Views: {job.views}</p>
+                        <p className="text-sm text-muted-foreground">
+                          Applications: {job.applications}
+                        </p>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <span className="text-sm text-muted-foreground">
+                        {format(new Date(job.createdAt), "MMM d, yyyy")}
+                      </span>
+                    </TableCell>
+                    <TableCell>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            className="h-8 w-8 p-0 hover:bg-muted"
+                          >
+                            <span className="sr-only">Open menu</span>
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="bg-background">
+                          <DropdownMenuItem
+                            onClick={() =>
+                              handleUpdateJob(job._id, {
+                                isActive: !job.isActive,
+                              })
+                            }
+                            className="cursor-pointer"
+                          >
+                            {job.isActive
+                              ? "Mark as inactive"
+                              : "Mark as active"}
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            className="text-destructive cursor-pointer"
+                            onClick={() => handleDeleteJob(job._id)}
+                          >
+                            Delete job
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </div>
+      </CardContent>
 
       {pagination.pages > 1 && (
         <div className="flex justify-center gap-2 mt-4">

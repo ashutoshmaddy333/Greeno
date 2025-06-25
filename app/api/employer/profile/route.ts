@@ -3,6 +3,16 @@ import dbConnect from "@/lib/db"
 import Company from "@/models/Company"
 import Job from "@/models/Job"
 import { authenticateUser, type AuthRequest } from "@/lib/auth"
+import formidable from "formidable"
+import path from "path"
+import fs from "fs/promises"
+
+// Set this to false to allow formidable to handle the body parsing
+export const config = {
+  api: {
+    bodyParser: false,
+  },
+}
 
 export async function GET(req: AuthRequest) {
   try {
@@ -74,7 +84,26 @@ export async function POST(req: AuthRequest) {
       return NextResponse.json({ success: false, message: "You already have a company profile" }, { status: 400 })
     }
 
-    const companyData = await req.json()
+    // Parse the form data, including the file
+    const form = formidable({
+      uploadDir: path.join(process.cwd(), "public/uploads"),
+      keepExtensions: true,
+      maxFileSize: 5 * 1024 * 1024, // 5MB limit
+    })
+
+    const [fields, files] = await form.parse(req as any) as [any, any]
+
+    const companyData = JSON.parse(fields.data[0])
+    const logoFile = files.logo ? files.logo[0] : null
+
+    let logoPath = ""
+    if (logoFile) {
+      const oldPath = logoFile.filepath
+      const filename = logoFile.newFilename
+      const newPath = path.join(process.cwd(), "public/uploads", filename)
+      await fs.rename(oldPath, newPath)
+      logoPath = `/uploads/${filename}` // Store the relative path
+    }
 
     // Validate required fields
     const requiredFields = ['name', 'description', 'industry', 'location']
@@ -108,6 +137,7 @@ export async function POST(req: AuthRequest) {
       ...companyData,
       owner: user._id,
       jobs: [],
+      ...(logoPath && { logo: logoPath }), // Add logo path if available
     })
 
     return NextResponse.json({

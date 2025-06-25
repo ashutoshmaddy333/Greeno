@@ -28,6 +28,7 @@ import {
   GraduationCap,
   Send,
   Loader2,
+  IndianRupee,
 } from "lucide-react"
 import SimilarJobs from "@/components/similar-jobs"
 import { getJobById, applyForJob } from "@/lib/actions"
@@ -65,25 +66,64 @@ interface CompanyInfo {
 }
 
 interface Job {
-  id: string
+  _id: string
   title: string
-  company: string
+  company: {
+    _id: string
+    name: string
+    logo: string
+  }
   location: string
   type: string
-  salary: string
-  posted: string
+  salary: {
+    min: number
+    max: number
+  }
   description: string
   requirements: string[]
-  benefits: string[]
-  skills: string[]
-  logo: string
-  views: number
-  isActive: boolean
-  remote: boolean
-  experienceLevel: string
   responsibilities: string[]
-  applicationDeadline?: string
+  skills: string[]
+  experienceLevel: string
+  education: string
+  remote: boolean
+  isActive: boolean
+  createdAt: string
+  updatedAt: string
+  posted: string
+  expires: string
+  views: number
+  applicants: number
+  isSaved?: boolean
+  isApplied?: boolean
   companyInfo?: CompanyInfo
+}
+
+const getLogoUrl = (logoPath: string | undefined) => {
+  if (!logoPath) return "/placeholder.svg"
+  
+  // If it's already a full URL, return as is
+  if (logoPath.startsWith('http')) {
+    return logoPath
+  }
+  
+  // If it's a relative path starting with /uploads, make it absolute
+  if (logoPath.startsWith('/uploads')) {
+    const origin = typeof window !== 'undefined' ? window.location.origin : ''
+    return `${origin}${logoPath}`
+  }
+  
+  // For any other case, return the path as is
+  return logoPath
+}
+
+// Helper function to format salary
+function formatSalary(min: number, max: number) {
+  if (!min || !max || isNaN(min) || isNaN(max)) {
+    return "Salary not specified"
+  }
+  const minLakhs = Math.round(min / 100000)
+  const maxLakhs = Math.round(max / 100000)
+  return `${minLakhs}L-${maxLakhs}L`
 }
 
 export default function JobDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -182,7 +222,7 @@ export default function JobDetailPage({ params }: { params: Promise<{ id: string
     setIsSaved(!isSaved)
 
     if (!isSaved) {
-      showToast.success(`${job?.title} at ${job?.company} saved to your favorites!`)
+      showToast.success(`${job?.title} at ${job?.company.name} saved to your favorites!`)
     } else {
       showToast.custom(`${job?.title} removed from your favorites`)
     }
@@ -413,13 +453,13 @@ export default function JobDetailPage({ params }: { params: Promise<{ id: string
           <Card>
             <CardContent className="p-6">
               <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
-                <div className="flex h-16 w-16 items-center justify-center rounded-lg border bg-muted p-2">
+                <Link href={`/company/${job.company._id}`} className="flex h-16 w-16 items-center justify-center rounded-lg border bg-muted p-2 hover:bg-muted/80 transition-colors">
                   <img
-                    src={job.logo || "/placeholder.svg?height=64&width=64"}
-                    alt={job.company}
+                    src={getLogoUrl(job.company.logo)}
+                    alt={job.company.name}
                     className="h-12 w-12 object-contain"
                   />
-                </div>
+                </Link>
                 <div className="flex-1 space-y-1.5">
                   <div className="flex items-center gap-2">
                     <h1 className="text-2xl font-bold">{job.title}</h1>
@@ -431,10 +471,10 @@ export default function JobDetailPage({ params }: { params: Promise<{ id: string
                     </Badge>
                   </div>
                   <div className="flex flex-wrap items-center gap-2 text-muted-foreground">
-                    <span className="flex items-center">
+                    <Link href={`/company/${job.company._id}`} className="flex items-center hover:text-foreground transition-colors">
                       <Building className="mr-1 h-4 w-4" />
-                      {job.company}
-                    </span>
+                      {job.company.name}
+                    </Link>
                     <span className="flex items-center">
                       <MapPin className="mr-1 h-4 w-4" />
                       {job.location}
@@ -456,7 +496,7 @@ export default function JobDetailPage({ params }: { params: Promise<{ id: string
                       </Badge>
                     )}
                     <Badge variant="outline" className="rounded-md">
-                      <span>{job.salary}</span>
+                      <span>{job.salary.min} - {job.salary.max}</span>
                     </Badge>
                     <Badge variant="outline" className="rounded-md">
                       <Clock className="mr-1 h-3 w-3" />
@@ -478,7 +518,7 @@ export default function JobDetailPage({ params }: { params: Promise<{ id: string
                       <DialogHeader>
                         <DialogTitle>Apply for {job?.title}</DialogTitle>
                         <DialogDescription>
-                          Complete the form below to submit your application to {job?.company}
+                          Complete the form below to submit your application to {job?.company.name}
                         </DialogDescription>
                       </DialogHeader>
                       <form onSubmit={handleApply} className="space-y-6 py-4">
@@ -793,16 +833,6 @@ export default function JobDetailPage({ params }: { params: Promise<{ id: string
                     </div>
                   )}
 
-                  {job.benefits && job.benefits.length > 0 && (
-                    <div>
-                      <h3 className="text-lg font-semibold mb-3">Benefits</h3>
-                      <div
-                        className="prose max-w-none dark:prose-invert text-muted-foreground"
-                        dangerouslySetInnerHTML={{ __html: formatDescription(job.benefits) }}
-                      />
-                    </div>
-                  )}
-
                   {job.skills && job.skills.length > 0 && (
                     <div>
                       <h3 className="text-lg font-semibold mb-3">Required Skills</h3>
@@ -845,19 +875,19 @@ export default function JobDetailPage({ params }: { params: Promise<{ id: string
                 </TabsContent>
                 <TabsContent value="company" className="p-6">
                   <div className="space-y-4">
-                    <div className="flex items-center space-x-4">
+                    <Link href={`/company/${job.company._id}`} className="flex items-center space-x-4 hover:bg-muted/50 p-2 rounded-lg transition-colors">
                       <div className="h-16 w-16 rounded-lg border bg-muted p-2">
                         <img
-                          src={job.companyInfo?.logo || "/placeholder.svg?height=64&width=64"}
-                          alt={job.companyInfo?.name || job.company}
+                          src={getLogoUrl(job.companyInfo?.logo)}
+                          alt={job.companyInfo?.name || job.company.name}
                           className="h-full w-full object-contain"
                         />
                       </div>
                       <div>
-                        <h3 className="text-lg font-semibold">{job.companyInfo?.name || job.company}</h3>
+                        <h3 className="text-lg font-semibold">{job.companyInfo?.name || job.company.name}</h3>
                         <p className="text-sm text-muted-foreground">{job.companyInfo?.industry || "Technology"}</p>
                       </div>
-                    </div>
+                    </Link>
                     <div className="grid gap-4 sm:grid-cols-2">
                       <div className="flex items-center space-x-2">
                         <Users className="h-4 w-4 text-muted-foreground" />
@@ -885,7 +915,7 @@ export default function JobDetailPage({ params }: { params: Promise<{ id: string
                     </div>
                     {job.companyInfo?.description && (
                       <div>
-                        <h4 className="mb-2 font-medium">About {job.companyInfo.name || job.company}</h4>
+                        <h4 className="mb-2 font-medium">About {job.companyInfo.name || job.company.name}</h4>
                         <p className="text-muted-foreground">{job.companyInfo.description}</p>
                       </div>
                     )}
@@ -905,7 +935,7 @@ export default function JobDetailPage({ params }: { params: Promise<{ id: string
                   <Building className="mt-0.5 h-5 w-5 text-muted-foreground" />
                   <div>
                     <p className="text-sm font-medium">Company</p>
-                    <p className="text-sm text-muted-foreground">{job.company}</p>
+                    <p className="text-sm text-muted-foreground">{job.company.name}</p>
                   </div>
                 </div>
                 <div className="flex items-start space-x-3">
@@ -923,10 +953,10 @@ export default function JobDetailPage({ params }: { params: Promise<{ id: string
                   </div>
                 </div>
                 <div className="flex items-start space-x-3">
-                  <DollarSign className="mt-0.5 h-5 w-5 text-muted-foreground" />
+                  <IndianRupee className="mt-0.5 h-5 w-5 text-muted-foreground" />
                   <div>
                     <p className="text-sm font-medium">Salary Range</p>
-                    <p className="text-sm text-muted-foreground">{job.salary}</p>
+                    <p className="text-sm text-muted-foreground">{formatSalary(job.salary.min, job.salary.max)}</p>
                   </div>
                 </div>
                 <div className="flex items-start space-x-3">
@@ -936,13 +966,13 @@ export default function JobDetailPage({ params }: { params: Promise<{ id: string
                     <p className="text-sm text-muted-foreground">{job.posted}</p>
                   </div>
                 </div>
-                {job.applicationDeadline && (
+                {job.expires && (
                   <div className="flex items-start space-x-3">
                     <Calendar className="mt-0.5 h-5 w-5 text-muted-foreground" />
                     <div>
                       <p className="text-sm font-medium">Application Deadline</p>
                       <p className="text-sm text-muted-foreground">
-                        {new Date(job.applicationDeadline).toLocaleDateString()}
+                        {new Date(job.expires).toLocaleDateString()}
                       </p>
                     </div>
                   </div>

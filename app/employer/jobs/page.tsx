@@ -310,7 +310,7 @@ export default function EmployerJobsPage() {
             ) : error ? (
               <div className="text-center text-destructive py-8">{error}</div>
             ) : jobs.length > 0 ? (
-              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              <div className="grid gap-4 sm:grid-cols-1 md:grid-cols-2">
                 {jobs.map((job) => (
                   <Card key={job.id} className="overflow-hidden transition-all hover-lift card-hover">
                     <CardContent className="p-0">

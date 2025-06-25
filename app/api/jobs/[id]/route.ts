@@ -56,12 +56,17 @@ export async function GET(
     const formattedJob = {
       id: job._id.toString(),
       title: job.title,
-      company: job.company?.name || "Unknown Company",
+      company: {
+        name: job.company?.name || "Unknown Company",
+        logo: job.company?.logo || "/placeholder.svg"
+      },
       location: job.remote ? "Remote" : job.location,
       type: job.employmentType,
-      salary: `₹${Math.round(job.salary.min / 100000)}L - ₹${Math.round(job.salary.max / 100000)}L`,
+      salary: {
+        min: job.salary.min,
+        max: job.salary.max
+      },
       posted: new Date(job.createdAt).toLocaleDateString(),
-      logo: job.company?.logo || "/placeholder.svg",
       description: job.description,
       responsibilities: job.responsibilities,
       requirements: job.requirements,

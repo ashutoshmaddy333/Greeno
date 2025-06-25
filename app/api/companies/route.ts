@@ -4,6 +4,13 @@ import Company from "@/models/Company"
 import { User } from "@/models/User"
 import { authenticateUser, type AuthRequest } from "@/lib/auth"
 import Job from "@/models/Job"
+import { ICompany } from "@/lib/actions"
+import { Types } from "mongoose"
+
+type CompanyWithId = Omit<ICompany, '_id'> & {
+  _id: Types.ObjectId
+  slug: string
+}
 
 // Get all companies
 export async function GET(request: NextRequest) {
@@ -17,89 +24,118 @@ export async function GET(request: NextRequest) {
     const search = searchParams.get("search") || ""
     const industry = searchParams.get("industry") || ""
     const size = searchParams.get("size") || ""
-    const sort = searchParams.get("sort") || "-createdAt"
+    const location = searchParams.get("location") || ""
+    const sort = searchParams.get("sort") || "-activeJobs"
 
     // Build query
     const query: any = {}
 
+    // Add search condition
     if (search) {
       query.$or = [
         { name: { $regex: search, $options: "i" } },
-        { description: { $regex: search, $options: "i" } },
+        { industry: { $regex: search, $options: "i" } },
+        { location: { $regex: search, $options: "i" } },
+        { description: { $regex: search, $options: "i" } }
       ]
     }
 
+    // Add filter conditions
     if (industry) {
       query.industry = industry
     }
-
     if (size) {
       query.size = size
+    }
+    if (location) {
+      query.location = { $regex: location, $options: "i" }
     }
 
     // Get total count for pagination
     const total = await Company.countDocuments(query)
 
-    // Get companies with pagination and sorting
-    const companies = await Company.find(query)
-      .populate({
-        path: "owner",
-        select: "name email",
-      })
-      .sort(sort)
+    // Build sort object
+    let sortObj: any = {}
+    if (sort === "-activeJobs") {
+      sortObj = { activeJobs: -1 }
+    } else if (sort === "activeJobs") {
+      sortObj = { activeJobs: 1 }
+    } else if (sort === "name") {
+      sortObj = { name: 1 }
+    } else if (sort === "-name") {
+      sortObj = { name: -1 }
+    }
+
+    // Fetch companies with pagination
+    const companies = await Company.find(query, { owner: 0, jobs: 0 })
+      .sort(sortObj)
       .skip((page - 1) * limit)
       .limit(limit)
+      .lean() as unknown as CompanyWithId[]
 
-    // Get active job counts for each company
+    console.log('Companies API - Raw companies from DB:', companies.map(c => ({
+      _id: c._id.toString(),
+      name: c.name,
+      slug: c.slug
+    })))
+
+    // Get active jobs count for each company
     const companiesWithJobs = await Promise.all(
       companies.map(async (company) => {
         const activeJobs = await Job.countDocuments({
           company: company._id,
-          isActive: true,
+          isActive: true
         })
-        return {
-          ...company.toObject(),
-          activeJobs,
+
+        // Ensure slug exists
+        let slug = company.slug
+        if (!slug) {
+          slug = company.name
+            .toLowerCase()
+            .replace(/[^a-z0-9]+/g, "-")
+            .replace(/(^-|-$)/g, "")
+          
+          // Update company with slug
+          await Company.findByIdAndUpdate(company._id, { slug })
+          console.log('Companies API - Updated company with slug:', { 
+            id: company._id.toString(),
+            name: company.name,
+            slug 
+          })
         }
+
+        const formattedCompany = {
+          ...company,
+          _id: company._id.toString(),
+          slug,
+          activeJobs,
+          logo: company.logo || "/placeholder.svg"
+        }
+        console.log('Companies API - Formatted company:', formattedCompany)
+        return formattedCompany
       })
     )
 
-    // Format the response
-    const formattedCompanies = companiesWithJobs.map((company) => ({
-      id: company._id,
-      name: company.name,
-      logo: company.logo || "/placeholder.svg",
-      website: company.website,
-      industry: company.industry,
-      size: company.size,
-      description: company.description,
-      location: company.location,
-      foundedYear: company.foundedYear,
-      activeJobs: company.activeJobs,
-      postedBy: {
-        id: company.owner?._id,
-        name: company.owner?.name,
-        email: company.owner?.email,
-      },
-    }))
+    console.log('Companies API - Final companies response:', companiesWithJobs.map(c => ({
+      _id: c._id,
+      name: c.name,
+      slug: c.slug
+    })))
 
     return NextResponse.json({
       success: true,
-      companies: formattedCompanies,
+      companies: companiesWithJobs,
       pagination: {
         total,
         page,
         limit,
-        pages: Math.ceil(total / limit),
-      },
-    })
+        pages: Math.ceil(total / limit)
+      }
+    }, { status: 200 })
   } catch (error: any) {
     console.error("Error fetching companies:", error)
     return NextResponse.json(
-      {
-        success: false,
-        message: error.message || "Failed to fetch companies",
-      },
+      { success: false, message: error.message || "An error occurred while fetching companies" },
       { status: 500 }
     )
   }
@@ -152,7 +188,20 @@ export async function POST(req: AuthRequest) {
     // Update user with company reference
     await User.findByIdAndUpdate(user._id, { company: company._id })
 
-    return NextResponse.json({ company }, { status: 201 })
+    // Format company response
+    const formattedCompany = {
+      ...company.toObject(),
+      _id: company._id.toString(),
+      slug: company.slug,
+      logo: company.logo || "/placeholder.svg"
+    }
+
+    console.log('Created company:', formattedCompany) // Debug log
+
+    return NextResponse.json({ 
+      success: true,
+      company: formattedCompany 
+    }, { status: 201 })
   } catch (error: any) {
     console.error("Create company error:", error)
 

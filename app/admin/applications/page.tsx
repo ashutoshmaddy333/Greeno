@@ -195,7 +195,7 @@ export default function ApplicationsPage() {
   }
 
   return (
-    <div className="container mx-auto py-8 space-y-6">
+    <div className="container mx-auto py-8 space-y-6 px-2 sm:px-4">
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Application Management</h1>
@@ -235,176 +235,178 @@ export default function ApplicationsPage() {
         </CardHeader>
         <CardContent className="p-0">
           <div className="rounded-md border">
-            <Table>
-              <TableHeader>
-                <TableRow className="bg-muted/50">
-                  <TableHead className="w-[25%]">
-                    <div className="flex items-center gap-2">
-                      <Briefcase className="h-4 w-4" />
-                      Job
-                    </div>
-                  </TableHead>
-                  <TableHead className="w-[15%]">
-                    <div className="flex items-center gap-2">
-                      <Building2 className="h-4 w-4" />
-                      Company
-                    </div>
-                  </TableHead>
-                  <TableHead className="w-[20%]">
-                    <div className="flex items-center gap-2">
-                      <User className="h-4 w-4" />
-                      Applicant
-                    </div>
-                  </TableHead>
-                  <TableHead className="w-[15%]">Status</TableHead>
-                  <TableHead className="w-[15%]">Experience</TableHead>
-                  <TableHead className="w-[10%]">
-                    <div className="flex items-center gap-2">
-                      <Calendar className="h-4 w-4" />
-                      Applied
-                    </div>
-                  </TableHead>
-                  <TableHead className="w-[100px]">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {loading ? (
-                  <TableRow>
-                    <TableCell colSpan={7} className="h-24 text-center">
-                      <div className="flex flex-col items-center justify-center gap-2">
-                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
-                        <p className="text-sm text-muted-foreground">Loading applications...</p>
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-muted/50">
+                    <TableHead className="w-[25%]">
+                      <div className="flex items-center gap-2">
+                        <Briefcase className="h-4 w-4" />
+                        Job
                       </div>
-                    </TableCell>
-                  </TableRow>
-                ) : applications.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={7} className="h-24 text-center">
-                      <div className="flex flex-col items-center justify-center gap-2">
-                        <FileText className="h-8 w-8 text-muted-foreground" />
-                        <p className="text-sm text-muted-foreground">No applications found</p>
+                    </TableHead>
+                    <TableHead className="w-[15%]">
+                      <div className="flex items-center gap-2">
+                        <Building2 className="h-4 w-4" />
+                        Company
                       </div>
-                    </TableCell>
+                    </TableHead>
+                    <TableHead className="w-[20%]">
+                      <div className="flex items-center gap-2">
+                        <User className="h-4 w-4" />
+                        Applicant
+                      </div>
+                    </TableHead>
+                    <TableHead className="w-[15%]">Status</TableHead>
+                    <TableHead className="w-[15%]">Experience</TableHead>
+                    <TableHead className="w-[10%]">
+                      <div className="flex items-center gap-2">
+                        <Calendar className="h-4 w-4" />
+                        Applied
+                      </div>
+                    </TableHead>
+                    <TableHead className="w-[100px]">Actions</TableHead>
                   </TableRow>
-                ) : (
-                  applications.map((application) => (
-                    <TableRow key={application._id} className="group">
-                      <TableCell className="font-medium">
-                        <div className="flex flex-col">
-                          <span className="font-semibold group-hover:text-primary transition-colors">
-                            {application.job.title}
-                          </span>
-                          <span className="text-sm text-muted-foreground">
-                            {application.job.company.name}
-                          </span>
+                </TableHeader>
+                <TableBody>
+                  {loading ? (
+                    <TableRow>
+                      <TableCell colSpan={7} className="h-24 text-center">
+                        <div className="flex flex-col items-center justify-center gap-2">
+                          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+                          <p className="text-sm text-muted-foreground">Loading applications...</p>
                         </div>
-                      </TableCell>
-                      <TableCell>
-                        <span className="text-sm">{application.job.company.name}</span>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex flex-col">
-                          <span className="font-medium group-hover:text-primary transition-colors">
-                            {application.applicant.name}
-                          </span>
-                          <span className="text-sm text-muted-foreground">
-                            {application.applicant.email}
-                          </span>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <Badge
-                          variant="secondary"
-                          className={`${getStatusColor(application.status)} capitalize`}
-                        >
-                          {application.status}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <span className="text-sm">
-                          {application.yearsOfExperience
-                            ? `${application.yearsOfExperience} years`
-                            : application.experience}
-                        </span>
-                      </TableCell>
-                      <TableCell>
-                        <span className="text-sm text-muted-foreground">
-                          {format(new Date(application.createdAt), "MMM d, yyyy")}
-                        </span>
-                      </TableCell>
-                      <TableCell>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button
-                              variant="ghost"
-                              className="h-8 w-8 p-0 hover:bg-muted"
-                            >
-                              <span className="sr-only">Open menu</span>
-                              <MoreHorizontal className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end" className="w-[200px]">
-                            <DropdownMenuItem
-                              onClick={() => {
-                                setSelectedApplication(application)
-                                setShowDetails(true)
-                              }}
-                            >
-                              <Eye className="h-4 w-4 mr-2" />
-                              View Details
-                            </DropdownMenuItem>
-                            {application.resumeUrl && (
-                              <DropdownMenuItem
-                                onClick={() => window.open(application.resumeUrl, "_blank")}
-                              >
-                                <Download className="h-4 w-4 mr-2" />
-                                Download Resume
-                              </DropdownMenuItem>
-                            )}
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem
-                              onClick={() =>
-                                handleUpdateStatus(application._id, "reviewing")
-                              }
-                            >
-                              Mark as Reviewing
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              onClick={() =>
-                                handleUpdateStatus(application._id, "shortlisted")
-                              }
-                            >
-                              Mark as Shortlisted
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              onClick={() =>
-                                handleUpdateStatus(application._id, "rejected")
-                              }
-                            >
-                              Mark as Rejected
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              onClick={() =>
-                                handleUpdateStatus(application._id, "accepted")
-                              }
-                            >
-                              Mark as Accepted
-                            </DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem
-                              className="text-destructive focus:text-destructive"
-                              onClick={() => handleDeleteApplication(application._id)}
-                            >
-                              Delete Application
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
                       </TableCell>
                     </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
+                  ) : applications.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={7} className="h-24 text-center">
+                        <div className="flex flex-col items-center justify-center gap-2">
+                          <FileText className="h-8 w-8 text-muted-foreground" />
+                          <p className="text-sm text-muted-foreground">No applications found</p>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    applications.map((application) => (
+                      <TableRow key={application._id} className="group">
+                        <TableCell className="font-medium">
+                          <div className="flex flex-col">
+                            <span className="font-semibold group-hover:text-primary transition-colors">
+                              {application.job.title}
+                            </span>
+                            <span className="text-sm text-muted-foreground">
+                              {application.job.company.name}
+                            </span>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <span className="text-sm">{application.job.company.name}</span>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex flex-col">
+                            <span className="font-medium group-hover:text-primary transition-colors">
+                              {application.applicant.name}
+                            </span>
+                            <span className="text-sm text-muted-foreground">
+                              {application.applicant.email}
+                            </span>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <Badge
+                            variant="secondary"
+                            className={`${getStatusColor(application.status)} capitalize`}
+                          >
+                            {application.status}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <span className="text-sm">
+                            {application.yearsOfExperience
+                              ? `${application.yearsOfExperience} years`
+                              : application.experience}
+                          </span>
+                        </TableCell>
+                        <TableCell>
+                          <span className="text-sm text-muted-foreground">
+                            {format(new Date(application.createdAt), "MMM d, yyyy")}
+                          </span>
+                        </TableCell>
+                        <TableCell>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                className="h-8 w-8 p-0 hover:bg-muted"
+                              >
+                                <span className="sr-only">Open menu</span>
+                                <MoreHorizontal className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="w-[200px]">
+                              <DropdownMenuItem
+                                onClick={() => {
+                                  setSelectedApplication(application)
+                                  setShowDetails(true)
+                                }}
+                              >
+                                <Eye className="h-4 w-4 mr-2" />
+                                View Details
+                              </DropdownMenuItem>
+                              {application.resumeUrl && (
+                                <DropdownMenuItem
+                                  onClick={() => window.open(application.resumeUrl, "_blank")}
+                                >
+                                  <Download className="h-4 w-4 mr-2" />
+                                  Download Resume
+                                </DropdownMenuItem>
+                              )}
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem
+                                onClick={() =>
+                                  handleUpdateStatus(application._id, "reviewing")
+                                }
+                              >
+                                Mark as Reviewing
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onClick={() =>
+                                  handleUpdateStatus(application._id, "shortlisted")
+                                }
+                              >
+                                Mark as Shortlisted
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onClick={() =>
+                                  handleUpdateStatus(application._id, "rejected")
+                                }
+                              >
+                                Mark as Rejected
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onClick={() =>
+                                  handleUpdateStatus(application._id, "accepted")
+                                }
+                              >
+                                Mark as Accepted
+                              </DropdownMenuItem>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem
+                                className="text-destructive focus:text-destructive"
+                                onClick={() => handleDeleteApplication(application._id)}
+                              >
+                                Delete Application
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </div>
           </div>
         </CardContent>
       </Card>

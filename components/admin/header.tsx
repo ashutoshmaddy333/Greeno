@@ -1,6 +1,5 @@
 "use client"
 
-import { Bell, Search } from "lucide-react"
 import { useAdmin } from "@/contexts/admin-context"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
@@ -22,12 +21,7 @@ export function AdminHeader() {
         <div className="flex items-center flex-1">
           <div className="w-full max-w-lg">
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                type="search"
-                placeholder="Search..."
-                className="w-full pl-9 bg-background"
-              />
+              {/* Notification icon removed */}
             </div>
           </div>
         </div>
@@ -35,10 +29,7 @@ export function AdminHeader() {
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon" className="relative hover:bg-accent">
-                <Bell className="h-5 w-5 text-muted-foreground" />
-                <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-destructive text-[10px] font-medium text-destructive-foreground flex items-center justify-center">
-                  3
-                </span>
+                {/* Notification icon removed */}
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-80 bg-background">
@@ -64,9 +55,7 @@ export function AdminHeader() {
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-          <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
-            <span className="text-sm font-medium text-primary">A</span>
-          </div>
+          {/* Admin profile avatar removed */}
         </div>
       </div>
     </header>

@@ -123,7 +123,7 @@ export default function AdminSettings() {
   }
 
   return (
-    <div className="container mx-auto py-8">
+    <div className="container mx-auto py-8 px-2 sm:px-4">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">Application Settings</h1>
         <div className="flex gap-4">
@@ -159,7 +159,7 @@ export default function AdminSettings() {
             </AlertDescription>
           </Alert>
 
-          <div className="grid gap-6 md:grid-cols-2">
+          <div className="grid gap-6 grid-cols-1 md:grid-cols-2">
             {/* Job Posting Settings */}
             <Card>
               <CardHeader>

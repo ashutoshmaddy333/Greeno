@@ -7,6 +7,8 @@ import { PipelineStage } from "mongoose"
 import fs from "fs"
 import path from "path"
 import { v4 as uuidv4 } from "uuid"
+import { upload, getRelativePath, deleteOldLogo, handleMulterError } from "@/lib/multer"
+import { NextApiRequest, NextApiResponse } from "next"
 
 // Get all jobs with filtering
 export async function GET(req: Request) {
@@ -330,6 +332,19 @@ async function saveLogoFile(file: File): Promise<string> {
   }
 }
 
+// Convert Next.js API route to Express middleware
+const multerMiddleware = (req: NextApiRequest, res: NextApiResponse) => {
+  return new Promise((resolve, reject) => {
+    upload.single('logo')(req as any, res as any, (err: any) => {
+      if (err) {
+        reject(err)
+      } else {
+        resolve((req as any).file)
+      }
+    })
+  })
+}
+
 // Create a new job
 export async function POST(req: AuthRequest) {
   try {
@@ -346,152 +361,173 @@ export async function POST(req: AuthRequest) {
       return NextResponse.json({ message: "Only employers can post jobs" }, { status: 403 })
     }
 
-    const formData = await req.formData()
-    const jobData = JSON.parse(formData.get("data") as string)
-    const logoFile = formData.get("logo") as File | null
+    // Convert Request to NextApiRequest for multer
+    const request = req as unknown as NextApiRequest
+    const res = {} as NextApiResponse
 
-    // Find or create company
-    let company = await Company.findOne({ owner: user._id })
+    try {
+      // Handle file upload with multer
+      const file = await multerMiddleware(request, res) as Express.Multer.File | undefined
+      
+      // Get job data from form data
+      const formData = await req.formData()
+      const jobData = JSON.parse(formData.get("data") as string)
 
-    if (!company) {
-      // Create a basic company profile if none exists
-      company = await Company.create({
-        name: jobData.company || "Default Company",
-        owner: user._id,
-        description: jobData.companyDescription || "Company description",
-        website: jobData.companyWebsite || "",
-        industry: jobData.companyIndustry || "Technology",
-        size: jobData.companySize || "1-10 employees",
-        location: jobData.location || "Remote",
-        jobs: [],
-      })
-    }
+      // Find or create company
+      let company = await Company.findOne({ owner: user._id })
 
-    // Handle logo upload if provided
-    if (logoFile) {
-      try {
-        const logoPath = await saveLogoFile(logoFile)
-        
-        // Delete old logo if exists
-        if (company.logo) {
-          const oldLogoPath = path.join(process.cwd(), "public", company.logo)
-          if (fs.existsSync(oldLogoPath)) {
-            fs.unlinkSync(oldLogoPath)
-          }
-        }
-        
-        // Update company with new logo
-        company.logo = logoPath
-        await company.save()
-      } catch (error: any) {
-        console.error("Error handling logo upload:", error)
-        return NextResponse.json({ message: error.message }, { status: 400 })
+      if (!company) {
+        // Create a basic company profile if none exists
+        company = await Company.create({
+          name: jobData.company || "Default Company",
+          owner: user._id,
+          description: jobData.companyDescription || "Company description",
+          website: jobData.companyWebsite || "",
+          industry: jobData.companyIndustry || "Technology",
+          size: jobData.companySize || "1-10 employees",
+          location: jobData.location || "Remote",
+          jobs: [],
+        })
       }
-    }
 
-    // Validate required fields
-    const requiredFields = [
-      "title",
-      "company",
-      "location",
-      "type",
-      "category",
-      "salary",
-      "description",
-      "responsibilities",
-      "requirements",
-      "experienceLevel",
-    ]
-    const missingFields = requiredFields.filter((field) => !jobData[field] || jobData[field].trim() === "")
+      // Handle logo upload if provided
+      if (file) {
+        try {
+          // Delete old logo if exists
+          if (company.logo) {
+            deleteOldLogo(company.logo)
+          }
+          
+          // Update company with new logo path
+          const logoPath = getRelativePath(file)
+          company.logo = logoPath
+          await company.save()
 
-    if (missingFields.length > 0) {
-      return NextResponse.json(
-        {
-          message: `Missing required fields: ${missingFields.join(", ")}`,
+          console.log("Logo saved successfully:", {
+            companyId: company._id,
+            logoPath,
+            fileSize: file.size,
+            fileType: file.mimetype
+          })
+        } catch (error: any) {
+          console.error("Error handling logo upload:", error)
+          return NextResponse.json({ message: error.message }, { status: 400 })
+        }
+      }
+
+      // Validate required fields
+      const requiredFields = [
+        "title",
+        "company",
+        "location",
+        "type",
+        "category",
+        "salary",
+        "description",
+        "responsibilities",
+        "requirements",
+        "experienceLevel",
+      ]
+      const missingFields = requiredFields.filter((field) => !jobData[field] || jobData[field].trim() === "")
+
+      if (missingFields.length > 0) {
+        return NextResponse.json(
+          {
+            message: `Missing required fields: ${missingFields.join(", ")}`,
+          },
+          { status: 400 },
+        )
+      }
+
+      // Parse salary range (now in lakhs)
+      const salaryMatch = jobData.salary.match(/^₹?(\d+)L?\s*-\s*₹?(\d+)L?$/i)
+      let salaryMin = 0,
+        salaryMax = 0
+
+      if (!salaryMatch) {
+        return NextResponse.json(
+          {
+            message: "Invalid salary format. Please use format: ₹5L - ₹10L",
+          },
+          { status: 400 },
+        )
+      }
+
+      salaryMin = Number.parseInt(salaryMatch[1]) * 100000 // Convert L to actual number
+      salaryMax = Number.parseInt(salaryMatch[2]) * 100000 // Convert L to actual number
+
+      if (salaryMin > salaryMax) {
+        return NextResponse.json(
+          {
+            message: "Minimum salary cannot be greater than maximum salary",
+          },
+          { status: 400 },
+        )
+      }
+
+      if (salaryMin < 0 || salaryMax < 0) {
+        return NextResponse.json(
+          {
+            message: "Salary values cannot be negative",
+          },
+          { status: 400 },
+        )
+      }
+
+      // Create job with updated salary
+      const job = await Job.create({
+        title: jobData.title,
+        company: company._id,
+        location: jobData.location,
+        description: jobData.description,
+        requirements: jobData.requirements.split("\n").filter((req: string) => req.trim()),
+        responsibilities: jobData.responsibilities.split("\n").filter((resp: string) => resp.trim()),
+        salary: {
+          min: salaryMin,
+          max: salaryMax,
+          currency: "INR",
         },
-        { status: 400 },
-      )
+        employmentType: jobData.type.toLowerCase().replace(/\s+/g, "-"),
+        experienceLevel: jobData.experienceLevel.toLowerCase().replace(" level", ""),
+        skills: jobData.skills
+          ? jobData.skills
+              .split(",")
+              .map((skill: string) => skill.trim())
+              .filter((skill: string) => skill)
+          : [],
+        benefits: jobData.benefits ? jobData.benefits.split("\n").filter((benefit: string) => benefit.trim()) : [],
+        applicationDeadline: jobData.applicationDeadline
+          ? new Date(jobData.applicationDeadline)
+          : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+        isActive: true,
+        views: 0,
+        applications: [],
+        postedBy: user._id,
+        remote: jobData.isRemote,
+        jobCategory: jobData.category.toLowerCase().replace(/\s+/g, "-"),
+      })
+
+      // Add job to company
+      company.jobs.push(job._id)
+      await company.save()
+
+      // Populate company info for response
+      await job.populate("company", "name logo website location industry")
+
+      return NextResponse.json({
+        success: true,
+        job,
+      })
+    } catch (error: any) {
+      // Handle multer errors
+      if (error instanceof Error) {
+        return NextResponse.json(
+          { message: error.message },
+          { status: 400 }
+        )
+      }
+      throw error
     }
-
-    // Parse salary range (now in lakhs)
-    const salaryMatch = jobData.salary.match(/^₹?(\d+)L?\s*-\s*₹?(\d+)L?$/i)
-    let salaryMin = 0,
-      salaryMax = 0
-
-    if (!salaryMatch) {
-      return NextResponse.json(
-        {
-          message: "Invalid salary format. Please use format: ₹5L - ₹10L",
-        },
-        { status: 400 },
-      )
-    }
-
-    salaryMin = Number.parseInt(salaryMatch[1]) * 100000 // Convert L to actual number
-    salaryMax = Number.parseInt(salaryMatch[2]) * 100000 // Convert L to actual number
-
-    if (salaryMin > salaryMax) {
-      return NextResponse.json(
-        {
-          message: "Minimum salary cannot be greater than maximum salary",
-        },
-        { status: 400 },
-      )
-    }
-
-    if (salaryMin < 0 || salaryMax < 0) {
-      return NextResponse.json(
-        {
-          message: "Salary values cannot be negative",
-        },
-        { status: 400 },
-      )
-    }
-
-    // Create job with updated salary
-    const job = await Job.create({
-      title: jobData.title,
-      company: company._id,
-      location: jobData.location,
-      description: jobData.description,
-      requirements: jobData.requirements.split("\n").filter((req: string) => req.trim()),
-      responsibilities: jobData.responsibilities.split("\n").filter((resp: string) => resp.trim()),
-      salary: {
-        min: salaryMin,
-        max: salaryMax,
-        currency: "INR",
-      },
-      employmentType: jobData.type.toLowerCase().replace(/\s+/g, "-"),
-      experienceLevel: jobData.experienceLevel.toLowerCase().replace(" level", ""),
-      skills: jobData.skills
-        ? jobData.skills
-            .split(",")
-            .map((skill: string) => skill.trim())
-            .filter((skill: string) => skill)
-        : [],
-      benefits: jobData.benefits ? jobData.benefits.split("\n").filter((benefit: string) => benefit.trim()) : [],
-      applicationDeadline: jobData.applicationDeadline
-        ? new Date(jobData.applicationDeadline)
-        : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
-      isActive: true,
-      views: 0,
-      applications: [],
-      postedBy: user._id,
-      remote: jobData.isRemote,
-      jobCategory: jobData.category.toLowerCase().replace(/\s+/g, "-"),
-    })
-
-    // Add job to company
-    company.jobs.push(job._id)
-    await company.save()
-
-    // Populate company info for response
-    await job.populate("company", "name logo website location industry")
-
-    return NextResponse.json({
-      success: true,
-      job,
-    })
   } catch (error: any) {
     console.error("Post job error:", error)
     return NextResponse.json({ message: error.message || "Server error" }, { status: 500 })

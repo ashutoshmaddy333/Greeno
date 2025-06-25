@@ -273,108 +273,110 @@ export default function ApplicationsPage() {
               No applications found for this job
             </div>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Applicant</TableHead>
-                  <TableHead>Job</TableHead>
-                  <TableHead>Applied</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Experience</TableHead>
-                  <TableHead>Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {applications.map((application) => (
-                  <TableRow key={application.id}>
-                    <TableCell>
-                      <div>
-                        <div className="font-medium">
-                          {application.firstName} {application.middleName} {application.lastName}
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Applicant</TableHead>
+                    <TableHead>Job</TableHead>
+                    <TableHead>Applied</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Experience</TableHead>
+                    <TableHead>Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {applications.map((application) => (
+                    <TableRow key={application.id}>
+                      <TableCell>
+                        <div>
+                          <div className="font-medium">
+                            {application.firstName} {application.middleName} {application.lastName}
+                          </div>
+                          <div className="text-sm text-muted-foreground">
+                            {application.email}
+                          </div>
                         </div>
-                        <div className="text-sm text-muted-foreground">
-                          {application.email}
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell>{application.job.title}</TableCell>
-                    <TableCell>
-                      {(() => {
-                        try {
-                          const date = new Date(application.appliedAt);
-                          if (isNaN(date.getTime())) {
+                      </TableCell>
+                      <TableCell>{application.job.title}</TableCell>
+                      <TableCell>
+                        {(() => {
+                          try {
+                            const date = new Date(application.appliedAt);
+                            if (isNaN(date.getTime())) {
+                              return "Invalid date";
+                            }
+                            return formatDistanceToNow(date, {
+                              addSuffix: true,
+                            });
+                          } catch (error) {
+                            console.error("Error formatting date:", error);
                             return "Invalid date";
                           }
-                          return formatDistanceToNow(date, {
-                            addSuffix: true,
-                          });
-                        } catch (error) {
-                          console.error("Error formatting date:", error);
-                          return "Invalid date";
-                        }
-                      })()}
-                    </TableCell>
-                    <TableCell>{getStatusBadge(application.status)}</TableCell>
-                    <TableCell>
-                      {application.experience === "experienced" 
-                        ? `${application.yearsOfExperience} years`
-                        : "Fresher"}
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center space-x-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => {
-                            setSelectedApplication(application)
-                            setShowApplicationDetails(true)
-                          }}
-                        >
-                          View Details
-                        </Button>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="sm">
-                              <MoreVertical className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem
-                              onClick={() => updateApplicationStatus(application.id, "reviewing")}
-                              disabled={application.status === "reviewing"}
-                            >
-                              <AlertCircle className="mr-2 h-4 w-4" />
-                              Mark as Reviewing
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              onClick={() => updateApplicationStatus(application.id, "shortlisted")}
-                              disabled={application.status === "shortlisted"}
-                            >
-                              <UserCheck className="mr-2 h-4 w-4" />
-                              Shortlist
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              onClick={() => updateApplicationStatus(application.id, "rejected")}
-                              disabled={application.status === "rejected"}
-                            >
-                              <UserX className="mr-2 h-4 w-4" />
-                              Reject
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              onClick={() => updateApplicationStatus(application.id, "hired")}
-                              disabled={application.status === "hired"}
-                            >
-                              <CheckCircle2 className="mr-2 h-4 w-4" />
-                              Mark as Hired
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                        })()}
+                      </TableCell>
+                      <TableCell>{getStatusBadge(application.status)}</TableCell>
+                      <TableCell>
+                        {application.experience === "experienced" 
+                          ? `${application.yearsOfExperience} years`
+                          : "Fresher"}
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center space-x-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              setSelectedApplication(application)
+                              setShowApplicationDetails(true)
+                            }}
+                          >
+                            View Details
+                          </Button>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="sm">
+                                <MoreVertical className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem
+                                onClick={() => updateApplicationStatus(application.id, "reviewing")}
+                                disabled={application.status === "reviewing"}
+                              >
+                                <AlertCircle className="mr-2 h-4 w-4" />
+                                Mark as Reviewing
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onClick={() => updateApplicationStatus(application.id, "shortlisted")}
+                                disabled={application.status === "shortlisted"}
+                              >
+                                <UserCheck className="mr-2 h-4 w-4" />
+                                Shortlist
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onClick={() => updateApplicationStatus(application.id, "rejected")}
+                                disabled={application.status === "rejected"}
+                              >
+                                <UserX className="mr-2 h-4 w-4" />
+                                Reject
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onClick={() => updateApplicationStatus(application.id, "hired")}
+                                disabled={application.status === "hired"}
+                              >
+                                <CheckCircle2 className="mr-2 h-4 w-4" />
+                                Mark as Hired
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
           )}
         </CardContent>
       </Card>
@@ -395,7 +397,7 @@ export default function ApplicationsPage() {
                 {/* Personal Information */}
                 <div>
                   <h3 className="text-lg font-semibold mb-4">Personal Information</h3>
-                  <div className="grid gap-4 md:grid-cols-2">
+                  <div className="grid gap-4 sm:grid-cols-1 md:grid-cols-2">
                     <div className="space-y-2">
                       <div className="text-sm font-medium">Full Name</div>
                       <div className="text-sm">

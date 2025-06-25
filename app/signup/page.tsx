@@ -96,16 +96,16 @@ export default function SignupPage() {
   }
 
   return (
-    <div className="container mx-auto flex min-h-[calc(100vh-200px)] items-center justify-center px-4 py-12">
-      <div className="grid w-full gap-8 md:grid-cols-2 lg:gap-12">
+    <div className="container mx-auto flex min-h-[calc(100vh-200px)] items-center justify-center px-2 sm:px-4 py-8 sm:py-12">
+      <div className="grid w-full gap-6 sm:gap-8 md:grid-cols-2 lg:gap-12">
         <div className="flex flex-col justify-center space-y-4 fade-in">
           <div className="space-y-2">
-            <h1 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl">Join Our Community</h1>
-            <p className="max-w-[600px] text-muted-foreground md:text-xl">
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tighter">Join Our Community</h1>
+            <p className="text-base sm:text-lg text-muted-foreground">
               Create an account to start your job search journey or find the perfect candidates.
             </p>
           </div>
-          <div className="flex h-[300px] items-center justify-center rounded-lg bg-muted">
+          <div className="flex h-40 sm:h-60 md:h-[300px] items-center justify-center rounded-lg bg-muted">
             <img
               src="/1.jpg?height=300&width=400"
               alt="Signup illustration"

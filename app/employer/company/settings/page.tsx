@@ -137,7 +137,7 @@ export default function CompanySettingsPage() {
                 <CardDescription>Basic information about your company</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="grid gap-4 md:grid-cols-2">
+                <div className="grid gap-4 sm:grid-cols-1 md:grid-cols-2">
                   <div>
                     <label className="text-sm font-medium text-muted-foreground">Company Name</label>
                     <p className="text-sm">{company.name}</p>

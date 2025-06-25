@@ -364,7 +364,7 @@ export default function ProfilePage() {
   const renderProfileDetails = () => (
     <div className="space-y-4">
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
+        <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-0">
           <div>
             <CardTitle>Basic Information</CardTitle>
             <CardDescription>Your professional profile details</CardDescription>
@@ -382,13 +382,14 @@ export default function ProfilePage() {
         </CardHeader>
         <CardContent className="space-y-4">
           {isEditMode ? (
-            <>
+            <form onSubmit={handleSubmit(handleProfileUpdate)} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="headline">Professional Headline</Label>
                 <Input
                   id="headline"
                   {...register("headline")}
                   placeholder="e.g., Senior Software Engineer"
+                  className="w-full"
                 />
               </div>
               <div className="space-y-2">
@@ -397,16 +398,17 @@ export default function ProfilePage() {
                   id="bio"
                   {...register("bio")}
                   placeholder="Write a brief professional summary"
-                  className="min-h-[100px]"
+                  className="min-h-[100px] w-full"
                 />
               </div>
-              <div className="grid gap-4 md:grid-cols-2">
+              <div className="grid gap-4 sm:gap-6 md:grid-cols-2">
                 <div className="space-y-2">
                   <Label htmlFor="location">Location</Label>
                   <Input
                     id="location"
                     {...register("location")}
                     placeholder="e.g., New York, NY"
+                    className="w-full"
                   />
                 </div>
                 <div className="space-y-2">
@@ -415,6 +417,7 @@ export default function ProfilePage() {
                     id="phone"
                     {...register("phone")}
                     placeholder="e.g., +1 (555) 123-4567"
+                    className="w-full"
                   />
                 </div>
               </div>
@@ -424,12 +427,22 @@ export default function ProfilePage() {
                   id="skills"
                   {...register("skills")}
                   placeholder="e.g., JavaScript, React, Node.js (comma separated)"
+                  className="w-full"
                 />
                 <p className="text-sm text-muted-foreground">
                   Enter your skills separated by commas
                 </p>
               </div>
-            </>
+              <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 mt-4">
+                <Button type="submit" disabled={saving} className="w-full sm:w-auto">
+                  {saving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Save className="h-4 w-4 mr-2" />}
+                  Save Changes
+                </Button>
+                <Button type="button" variant="outline" onClick={() => { setIsEditMode(false); if (profile) reset(profile); }} className="w-full sm:w-auto">
+                  Cancel
+                </Button>
+              </div>
+            </form>
           ) : (
             <>
               {profile?.headline && (
@@ -444,23 +457,17 @@ export default function ProfilePage() {
                   <p className="text-sm whitespace-pre-wrap">{profile.bio}</p>
                 </div>
               )}
-              <div className="grid gap-4 md:grid-cols-2">
+              <div className="grid gap-4 sm:gap-6 md:grid-cols-2">
                 {profile?.location && (
                   <div className="space-y-2">
                     <Label>Location</Label>
-                    <div className="flex items-center text-sm">
-                      <MapPin className="mr-2 h-4 w-4 text-muted-foreground" />
-                      {profile.location}
-                    </div>
+                    <p className="text-sm">{profile.location}</p>
                   </div>
                 )}
                 {profile?.phone && (
                   <div className="space-y-2">
                     <Label>Phone</Label>
-                    <div className="flex items-center text-sm">
-                      <Phone className="mr-2 h-4 w-4 text-muted-foreground" />
-                      {profile.phone}
-                    </div>
+                    <p className="text-sm">{profile.phone}</p>
                   </div>
                 )}
               </div>
@@ -468,8 +475,8 @@ export default function ProfilePage() {
                 <div className="space-y-2">
                   <Label>Skills</Label>
                   <div className="flex flex-wrap gap-2">
-                    {profile.skills.map((skill, index) => (
-                      <Badge key={index} variant="secondary">
+                    {profile.skills.map((skill, idx) => (
+                      <Badge key={idx} variant="outline" className="text-xs bg-primary/5">
                         {skill}
                       </Badge>
                     ))}
@@ -610,113 +617,54 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8 md:px-6">
-      <div className="flex flex-col space-y-8">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight">Job Seeker Profile</h1>
-            <p className="text-muted-foreground">Manage your profile and job applications</p>
-          </div>
-        </div>
-
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList>
-            <TabsTrigger value="profile">Profile</TabsTrigger>
-            <TabsTrigger value="saved">Saved Jobs</TabsTrigger>
-            <TabsTrigger value="applied">Applied Jobs</TabsTrigger>
+    <div className="container mx-auto px-2 sm:px-4 py-8">
+      <div className="max-w-4xl mx-auto">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className="w-full flex flex-col sm:flex-row gap-2 sm:gap-4 mb-6">
+            <TabsTrigger value="profile" className="flex-1 transition-colors hover:bg-primary/10 hover:text-primary">Profile</TabsTrigger>
+            <TabsTrigger value="saved" className="flex-1 transition-colors hover:bg-primary/10 hover:text-primary">Saved Jobs</TabsTrigger>
+            <TabsTrigger value="applied" className="flex-1 transition-colors hover:bg-primary/10 hover:text-primary">Applied Jobs</TabsTrigger>
           </TabsList>
-
           <TabsContent value="profile">
-            <div className="grid gap-6 md:grid-cols-[240px_1fr]">
-              {/* Profile Picture Card */}
-              <Card>
-                <CardContent className="pt-6">
-                  <div className="flex flex-col items-center space-y-4">
-                    <div className="relative">
-                      <Avatar className="h-32 w-32">
-                        <AvatarImage
-                          src={profile?.profilePicture ? `${profile.profilePicture}?t=${Date.now()}` : "/placeholder.svg"}
-                          alt={user?.name || "Profile picture"}
-                        />
-                        <AvatarFallback className="text-2xl">
-                          {user?.name?.charAt(0) || "U"}
-                        </AvatarFallback>
-                      </Avatar>
-                      {isEditMode && (
-                        <div className="absolute bottom-0 right-0 flex space-x-2">
-                          <Input
-                            type="file"
-                            id="profilePicture"
-                            className="hidden"
-                            accept="image/*"
-                            onChange={handleProfilePictureUpload}
-                            disabled={uploading}
-                          />
-                          <Button
-                            type="button"
-                            size="icon"
-                            variant="secondary"
-                            onClick={() => document.getElementById("profilePicture")?.click()}
-                            disabled={uploading}
-                          >
-                            {uploading ? (
-                              <Loader2 className="h-4 w-4 animate-spin" />
-                            ) : (
-                              <Upload className="h-4 w-4" />
-                            )}
-                          </Button>
-                          {profile?.profilePicture && (
-                            <Button
-                              type="button"
-                              size="icon"
-                              variant="destructive"
-                              onClick={handleDeleteProfilePicture}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                    <div className="text-center">
-                      <h3 className="font-semibold">{user?.name}</h3>
-                      <p className="text-sm text-muted-foreground">{user?.email}</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Profile Content */}
-              {isEditMode ? (
-                <form onSubmit={handleSubmit(handleProfileUpdate)}>
-                  {renderProfileDetails()}
-                  <div className="flex justify-end space-x-2">
+            <div className="flex flex-col md:flex-row gap-8">
+              {/* Left: Profile Picture and Upload */}
+              <div className="flex flex-col items-center md:items-start w-full md:w-1/3 gap-4">
+                <Avatar className="h-32 w-32 border-2 border-primary/20">
+                  <AvatarImage src={profile?.profilePicture || undefined} alt={profile?.headline || 'Profile Picture'} />
+                  <AvatarFallback>{user?.name?.[0] || 'U'}</AvatarFallback>
+                </Avatar>
+                <input
+                  id="profilePicture"
+                  type="file"
+                  accept="image/jpeg,image/png,image/svg+xml"
+                  className="hidden"
+                  onChange={handleProfilePictureUpload}
+                />
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => document.getElementById('profilePicture')?.click()}
+                    disabled={uploading}
+                  >
+                    <Upload className="h-4 w-4 mr-1" /> Upload
+                  </Button>
+                  {profile?.profilePicture && (
                     <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => setIsEditMode(false)}
+                      variant="destructive"
+                      size="sm"
+                      onClick={handleDeleteProfilePicture}
+                      disabled={uploading}
                     >
-                      Cancel
+                      <Trash2 className="h-4 w-4 mr-1" /> Delete
                     </Button>
-                    <Button type="submit" disabled={saving}>
-                      {saving ? (
-                        <>
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          Saving...
-                        </>
-                      ) : (
-                        <>
-                          <Save className="mr-2 h-4 w-4" />
-                          Save Changes
-                        </>
-                      )}
-                    </Button>
-                  </div>
-                </form>
-              ) : (
-                renderProfileDetails()
-              )}
+                  )}
+                </div>
+              </div>
+              {/* Right: Profile Details */}
+              <div className="flex-1 w-full">
+                {renderProfileDetails()}
+              </div>
             </div>
           </TabsContent>
 
@@ -749,12 +697,14 @@ export default function ProfilePage() {
                         company={job.company?.name || 'Company not specified'}
                         location={job.location}
                         type={job.type}
-                        salary={job.salary ? `₹${Math.round(job.salary.min / 100000)}L - ₹${Math.round(job.salary.max / 100000)}L` : 'Salary not specified'}
+                        salary={job.salary ? { min: job.salary.min, max: job.salary.max } : undefined}
                         posted={new Date(job.createdAt).toLocaleDateString()}
                         logo={job.company?.logo}
                         isActive={job.isActive}
                         isSaved={true}
+                        isApplied={false}
                         onSave={handleSaveJob}
+                        onApply={() => { window.location.href = `/job/${job._id}`; }}
                       />
                     ))}
                   </div>
@@ -792,13 +742,16 @@ export default function ProfilePage() {
                           company={application.job.company.name}
                           location={application.job.location}
                           type={application.job.type}
-                          salary={`₹${Math.round(application.job.salary.min / 100000)}L - ₹${Math.round(application.job.salary.max / 100000)}L`}
+                          salary={application.job.salary ? { min: application.job.salary.min, max: application.job.salary.max } : undefined}
                           posted={new Date(application.job.createdAt).toLocaleDateString()}
                           logo={application.job.company.logo}
                           isActive={application.job.isActive}
                           isApplied={true}
+                          isSaved={false}
+                          onSave={() => {}}
+                          onApply={() => { window.location.href = `/job/${application.job._id}`; }}
                         />
-                        <div className="absolute top-4 right-4 flex items-center gap-2">
+                        <div className="flex flex-col sm:flex-row items-center gap-2 mt-2 sm:absolute sm:top-4 sm:right-4 sm:mt-0 z-10">
                           <Badge
                             variant={
                               application.status === "shortlisted"
@@ -807,6 +760,7 @@ export default function ProfilePage() {
                                 ? "destructive"
                                 : "secondary"
                             }
+                            className="w-full sm:w-auto text-center"
                           >
                             {application.status.charAt(0).toUpperCase() + application.status.slice(1)}
                           </Badge>
@@ -814,6 +768,7 @@ export default function ProfilePage() {
                             <Button
                               variant="outline"
                               size="sm"
+                              className="w-full sm:w-auto"
                               onClick={() => handleWithdrawApplication(application.job._id)}
                               disabled={withdrawingApplication === application.job._id}
                             >

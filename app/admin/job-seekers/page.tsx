@@ -142,7 +142,7 @@ export default function JobSeekersPage() {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 px-2 sm:px-4">
       <div>
         <h1 className="text-3xl font-bold">Job Seekers</h1>
         <p className="text-muted-foreground">Manage job seekers and their accounts</p>
@@ -172,106 +172,108 @@ export default function JobSeekersPage() {
           </div>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>Contact</TableHead>
-                <TableHead>Location</TableHead>
-                <TableHead>Skills</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Joined</TableHead>
-                <TableHead className="w-[100px]">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {jobSeekers.map((seeker) => (
-                <TableRow key={seeker._id}>
-                  <TableCell>
-                    <div>
-                      <p className="font-medium">{seeker.fullName}</p>
-                      <p className="text-sm text-muted-foreground">{seeker.user.email}</p>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="space-y-1">
-                      <div className="flex items-center text-sm">
-                        <Phone className="mr-2 h-4 w-4 text-muted-foreground" />
-                        {seeker.phone}
-                      </div>
-                      <div className="flex items-center text-sm">
-                        <Mail className="mr-2 h-4 w-4 text-muted-foreground" />
-                        {seeker.user.email}
-                      </div>
-                    </div>
-                  </TableCell>
-                  <TableCell>{seeker.location}</TableCell>
-                  <TableCell>
-                    <div className="flex flex-wrap gap-1">
-                      {seeker.skills.slice(0, 3).map((skill) => (
-                        <Badge key={skill} variant="secondary">
-                          {skill}
-                        </Badge>
-                      ))}
-                      {seeker.skills.length > 3 && (
-                        <Badge variant="outline">+{seeker.skills.length - 3}</Badge>
-                      )}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <Badge
-                      variant={seeker.status === "active" ? "default" : "destructive"}
-                      className="capitalize"
-                    >
-                      {seeker.status}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    {formatDistanceToNow(new Date(seeker.createdAt), { addSuffix: true })}
-                  </TableCell>
-                  <TableCell>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon">
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem>
-                          <Eye className="mr-2 h-4 w-4" />
-                          View Profile
-                        </DropdownMenuItem>
-                        <DropdownMenuItem>
-                          <FileText className="mr-2 h-4 w-4" />
-                          View Resume
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        {seeker.status === "active" ? (
-                          <DropdownMenuItem
-                            className="text-red-600"
-                            onClick={() => handleStatusChange(seeker._id, "suspended")}
-                          >
-                            <Ban className="mr-2 h-4 w-4" />
-                            Suspend Account
-                          </DropdownMenuItem>
-                        ) : (
-                          <DropdownMenuItem
-                            className="text-green-600"
-                            onClick={() => handleStatusChange(seeker._id, "active")}
-                          >
-                            <CheckCircle className="mr-2 h-4 w-4" />
-                            Activate Account
-                          </DropdownMenuItem>
-                        )}
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Name</TableHead>
+                  <TableHead>Contact</TableHead>
+                  <TableHead>Location</TableHead>
+                  <TableHead>Skills</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Joined</TableHead>
+                  <TableHead className="w-[100px]">Actions</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {jobSeekers.map((seeker) => (
+                  <TableRow key={seeker._id}>
+                    <TableCell>
+                      <div>
+                        <p className="font-medium">{seeker.fullName}</p>
+                        <p className="text-sm text-muted-foreground">{seeker.user.email}</p>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="space-y-1">
+                        <div className="flex items-center text-sm">
+                          <Phone className="mr-2 h-4 w-4 text-muted-foreground" />
+                          {seeker.phone}
+                        </div>
+                        <div className="flex items-center text-sm">
+                          <Mail className="mr-2 h-4 w-4 text-muted-foreground" />
+                          {seeker.user.email}
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell>{seeker.location}</TableCell>
+                    <TableCell>
+                      <div className="flex flex-wrap gap-1">
+                        {seeker.skills.slice(0, 3).map((skill) => (
+                          <Badge key={skill} variant="secondary">
+                            {skill}
+                          </Badge>
+                        ))}
+                        {seeker.skills.length > 3 && (
+                          <Badge variant="outline">+{seeker.skills.length - 3}</Badge>
+                        )}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <Badge
+                        variant={seeker.status === "active" ? "default" : "destructive"}
+                        className="capitalize"
+                      >
+                        {seeker.status}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      {formatDistanceToNow(new Date(seeker.createdAt), { addSuffix: true })}
+                    </TableCell>
+                    <TableCell>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon">
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem>
+                            <Eye className="mr-2 h-4 w-4" />
+                            View Profile
+                          </DropdownMenuItem>
+                          <DropdownMenuItem>
+                            <FileText className="mr-2 h-4 w-4" />
+                            View Resume
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          {seeker.status === "active" ? (
+                            <DropdownMenuItem
+                              className="text-red-600"
+                              onClick={() => handleStatusChange(seeker._id, "suspended")}
+                            >
+                              <Ban className="mr-2 h-4 w-4" />
+                              Suspend Account
+                            </DropdownMenuItem>
+                          ) : (
+                            <DropdownMenuItem
+                              className="text-green-600"
+                              onClick={() => handleStatusChange(seeker._id, "active")}
+                            >
+                              <CheckCircle className="mr-2 h-4 w-4" />
+                              Activate Account
+                            </DropdownMenuItem>
+                          )}
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
 
           {/* Pagination Controls */}
           {pagination.pages > 1 && (

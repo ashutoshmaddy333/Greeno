@@ -219,7 +219,7 @@ export default function EditJobPage({ params }: { params: Promise<{ id: string }
             <CardDescription>Update the details of your job posting</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
-            <div className="grid gap-4 md:grid-cols-2">
+            <div className="grid gap-4 sm:grid-cols-1 md:grid-cols-2">
               <div className="space-y-2">
                 <Label htmlFor="title">Job Title</Label>
                 <Input

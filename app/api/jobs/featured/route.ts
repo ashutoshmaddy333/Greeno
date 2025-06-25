@@ -18,7 +18,10 @@ export async function GET() {
       company: job.company?.name || "Unknown Company",
       location: job.location,
       type: job.employmentType.charAt(0).toUpperCase() + job.employmentType.slice(1).replace("-", " "),
-      salary: `₹${Math.round(job.salary.min / 100000)}L - ₹${Math.round(job.salary.max / 100000)}L`,
+      salary: {
+        min: job.salary.min,
+        max: job.salary.max
+      },
       posted: formatTimeAgo(job.createdAt),
       logo: job.company?.logo || "/placeholder.svg?height=40&width=40",
       isActive: job.isActive

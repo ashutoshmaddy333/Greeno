@@ -9,18 +9,18 @@ import InterviewTips from "@/components/interview-tips"
 
 export default function ResourcesPage() {
   return (
-    <div className="container mx-auto px-4 py-8 md:px-6">
+    <div className="container mx-auto px-2 sm:px-4 py-8 sm:py-12 md:px-6">
       <div className="flex flex-col space-y-8">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Career Resources</h1>
-          <p className="text-muted-foreground">
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Career Resources</h1>
+          <p className="text-base sm:text-lg text-muted-foreground">
             Explore our comprehensive resources to help you advance in your career journey
           </p>
         </div>
 
         <Tabs defaultValue="all" className="space-y-6">
-          <div className="flex justify-center">
-            <TabsList className="grid w-full max-w-2xl grid-cols-3 md:grid-cols-6">
+          <div className="flex justify-center overflow-x-auto pb-2">
+            <TabsList className="grid w-full max-w-2xl grid-cols-3 md:grid-cols-6 min-w-[320px]">
               <TabsTrigger value="all">All</TabsTrigger>
               <TabsTrigger value="articles">Articles</TabsTrigger>
               <TabsTrigger value="guides">Guides</TabsTrigger>
@@ -33,10 +33,10 @@ export default function ResourcesPage() {
           <TabsContent value="all" className="space-y-8">
             {/* Featured Resources */}
             <section>
-              <h2 className="mb-6 text-2xl font-bold tracking-tight">Featured Resources</h2>
-              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                <Card className="overflow-hidden">
-                  <div className="aspect-video w-full overflow-hidden bg-muted">
+              <h2 className="mb-6 text-xl sm:text-2xl font-bold tracking-tight">Featured Resources</h2>
+              <div className="grid gap-6 sm:gap-8 md:grid-cols-2 lg:grid-cols-3">
+                <Card className="overflow-hidden w-full">
+                  <div className="h-32 sm:h-40 md:h-48 w-full overflow-hidden bg-muted">
                     <img
                       src="/placeholder.svg?height=200&width=400"
                       alt="Resume writing guide"

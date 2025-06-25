@@ -53,14 +53,14 @@ export default function Footer() {
 
   return (
     <footer className="border-t bg-background">
-      <div className="container px-4 py-12 md:px-6 md:py-16 lg:py-20">
-        <div className="grid gap-8 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
+      <div className="container px-4 py-8 sm:py-12 md:px-6 md:py-16 lg:py-20">
+        <div className="grid gap-8 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
           <div className="space-y-4 lg:col-span-2">
             <Link href="/" className="flex items-center gap-2" onClick={(e) => handleLinkClick(e, "/")}>
-              <Briefcase className="h-6 w-6 text-primary" />
-              <span className="text-xl font-bold">JobConnect</span>
+              <Briefcase className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
+              <span className="text-lg sm:text-xl font-bold">JobConnect</span>
             </Link>
-            <p className="max-w-xs text-muted-foreground">
+            <p className="max-w-xs text-sm sm:text-base text-muted-foreground">
               Connecting talented professionals with their dream careers and helping employers find the perfect
               candidates.
             </p>
@@ -68,7 +68,7 @@ export default function Footer() {
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-9 w-9 rounded-full bg-primary/10 hover:bg-primary/20 hover:text-primary transition-colors"
+                className="h-8 w-8 sm:h-9 sm:w-9 rounded-full bg-primary/10 hover:bg-primary/20 hover:text-primary transition-colors"
                 asChild
               >
                 <a
@@ -76,14 +76,14 @@ export default function Footer() {
                   target="_blank"
                   rel="noopener noreferrer"
                 >
-                  <Facebook className="h-4 w-4" />
+                  <Facebook className="h-3 w-3 sm:h-4 sm:w-4" />
                   <span className="sr-only">Facebook</span>
                 </a>
               </Button>
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-9 w-9 rounded-full bg-primary/10 hover:bg-primary/20 hover:text-primary transition-colors"
+                className="h-8 w-8 sm:h-9 sm:w-9 rounded-full bg-primary/10 hover:bg-primary/20 hover:text-primary transition-colors"
                 asChild
               >
                 <a
@@ -91,14 +91,14 @@ export default function Footer() {
                   target="_blank"
                   rel="noopener noreferrer"
                 >
-                  <Twitter className="h-4 w-4" />
+                  <Twitter className="h-3 w-3 sm:h-4 sm:w-4" />
                   <span className="sr-only">Twitter</span>
                 </a>
               </Button>
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-9 w-9 rounded-full bg-primary/10 hover:bg-primary/20 hover:text-primary transition-colors"
+                className="h-8 w-8 sm:h-9 sm:w-9 rounded-full bg-primary/10 hover:bg-primary/20 hover:text-primary transition-colors"
                 asChild
               >
                 <a
@@ -106,14 +106,14 @@ export default function Footer() {
                   target="_blank"
                   rel="noopener noreferrer"
                 >
-                  <Instagram className="h-4 w-4" />
+                  <Instagram className="h-3 w-3 sm:h-4 sm:w-4" />
                   <span className="sr-only">Instagram</span>
                 </a>
               </Button>
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-9 w-9 rounded-full bg-primary/10 hover:bg-primary/20 hover:text-primary transition-colors"
+                className="h-8 w-8 sm:h-9 sm:w-9 rounded-full bg-primary/10 hover:bg-primary/20 hover:text-primary transition-colors"
                 asChild
               >
                 <a
@@ -121,7 +121,7 @@ export default function Footer() {
                   target="_blank"
                   rel="noopener noreferrer"
                 >
-                  <Youtube className="h-4 w-4" />
+                  <Youtube className="h-3 w-3 sm:h-4 sm:w-4" />
                   <span className="sr-only">YouTube</span>
                 </a>
               </Button>
@@ -130,14 +130,14 @@ export default function Footer() {
 
           {/* Show different links based on user role */}
           {isJobSeeker ? (
-            <div className="space-y-4">
-              <h3 className="text-sm font-medium uppercase tracking-wider">For Job Seekers</h3>
-              <ul className="space-y-2">
+            <div className="space-y-3 sm:space-y-4">
+              <h3 className="text-xs sm:text-sm font-medium uppercase tracking-wider">For Job Seekers</h3>
+              <ul className="space-y-1.5 sm:space-y-2">
                 {jobSeekerLinks.map((item) => (
                   <li key={item.name}>
                     <Link
                       href={item.href}
-                      className="group flex items-center text-muted-foreground hover:text-foreground transition-colors"
+                      className="group flex items-center text-sm sm:text-base text-muted-foreground hover:text-foreground transition-colors"
                       onClick={(e) => handleLinkClick(e, item.href)}
                     >
                       <ChevronRight className="mr-1 h-3 w-3 text-primary opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -148,14 +148,14 @@ export default function Footer() {
               </ul>
             </div>
           ) : (
-            <div className="space-y-4">
-              <h3 className="text-sm font-medium uppercase tracking-wider">For Employers</h3>
-              <ul className="space-y-2">
+            <div className="space-y-3 sm:space-y-4">
+              <h3 className="text-xs sm:text-sm font-medium uppercase tracking-wider">For Employers</h3>
+              <ul className="space-y-1.5 sm:space-y-2">
                 {employerLinks.map((item) => (
                   <li key={item.name}>
                     <Link
                       href={item.href}
-                      className="group flex items-center text-muted-foreground hover:text-foreground transition-colors"
+                      className="group flex items-center text-sm sm:text-base text-muted-foreground hover:text-foreground transition-colors"
                       onClick={(e) => handleLinkClick(e, item.href)}
                     >
                       <ChevronRight className="mr-1 h-3 w-3 text-primary opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -167,14 +167,14 @@ export default function Footer() {
             </div>
           )}
 
-          <div className="space-y-4">
-            <h3 className="text-sm font-medium uppercase tracking-wider">Company</h3>
-            <ul className="space-y-2">
+          <div className="space-y-3 sm:space-y-4">
+            <h3 className="text-xs sm:text-sm font-medium uppercase tracking-wider">Company</h3>
+            <ul className="space-y-1.5 sm:space-y-2">
               {companyLinks.map((item) => (
                 <li key={item.name}>
                   <Link
                     href={item.href}
-                    className="group flex items-center text-muted-foreground hover:text-foreground transition-colors"
+                    className="group flex items-center text-sm sm:text-base text-muted-foreground hover:text-foreground transition-colors"
                     onClick={(e) => handleLinkClick(e, item.href)}
                   >
                     <ChevronRight className="mr-1 h-3 w-3 text-primary opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -186,7 +186,7 @@ export default function Footer() {
           </div>
         </div>
 
-        <div className="mt-8 border-t pt-8 text-center text-sm text-muted-foreground">
+        <div className="mt-6 sm:mt-8 border-t pt-6 sm:pt-8 text-center text-xs sm:text-sm text-muted-foreground">
           <p>© {new Date().getFullYear()} JobConnect. All rights reserved.</p>
         </div>
       </div>

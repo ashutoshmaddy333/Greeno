@@ -75,7 +75,10 @@ export async function GET(request: NextRequest) {
       company: job.company?.name || "Unknown Company",
       location: "Remote",
       type: job.employmentType.charAt(0).toUpperCase() + job.employmentType.slice(1).replace("-", " "),
-      salary: `₹${Math.round(job.salary.min / 100000)}L - ₹${Math.round(job.salary.max / 100000)}L`,
+      salary: {
+        min: job.salary.min,
+        max: job.salary.max
+      },
       posted: new Date(job.createdAt).toLocaleDateString(),
       logo: job.company?.logo || "/placeholder.svg",
       description: job.description,

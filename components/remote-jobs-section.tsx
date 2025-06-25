@@ -98,20 +98,48 @@ export default function RemoteJobsSection() {
 
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {jobs.length > 0 ? (
-            jobs.map((job) => (
-              <JobCard
-                key={job.id}
-                id={job.id}
-                title={job.title}
-                company={job.company}
-                location={job.location}
-                type={job.type}
-                salary={job.salary}
-                posted={job.posted}
-                logo={job.logo}
-                isActive={true}
-              />
-            ))
+            jobs.map((job) => {
+              let salaryObj: { min?: number; max?: number } | undefined = undefined;
+              if (typeof job.salary === 'string' && job.salary.trim() !== '') {
+                const salaryStr = job.salary.trim();
+                if (/^\d+-\d+$/.test(salaryStr)) {
+                  const [minStr, maxStr] = salaryStr.split('-');
+                  const min = parseInt(minStr) * 100000;
+                  const max = parseInt(maxStr) * 100000;
+                  if (!isNaN(min) && !isNaN(max)) {
+                    salaryObj = { min, max };
+                  }
+                } else if (/^\d+\+$/.test(salaryStr)) {
+                  const min = parseInt(salaryStr);
+                  if (!isNaN(min)) {
+                    salaryObj = { min: min * 100000 };
+                  }
+                } else if (/^\d+$/.test(salaryStr)) {
+                  const value = parseInt(salaryStr) * 100000;
+                  if (!isNaN(value)) {
+                    salaryObj = { min: value, max: value };
+                  }
+                }
+              }
+              return (
+                <JobCard
+                  key={job.id}
+                  id={job.id}
+                  title={job.title}
+                  company={job.company}
+                  location={job.location}
+                  type={job.type}
+                  salary={salaryObj}
+                  posted={job.posted}
+                  logo={job.logo}
+                  isActive={true}
+                  isSaved={false}
+                  isApplied={false}
+                  onSave={() => {}}
+                  onApply={() => { window.location.href = `/job/${job.id}`; }}
+                />
+              );
+            })
           ) : (
             <div className="col-span-full text-center py-12">
               <p className="text-muted-foreground">No remote jobs available at the moment.</p>

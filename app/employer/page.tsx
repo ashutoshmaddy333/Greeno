@@ -14,6 +14,7 @@ import Link from "next/link"
 import { CreateCompanyForm } from "@/components/create-company-form"
 import { getEmployerProfile } from "@/lib/actions"
 import { useToast } from "@/components/ui/use-toast"
+import { getLogoUrl } from "@/lib/utils"
 
 interface Company {
   _id: string
@@ -167,145 +168,248 @@ export default function EmployerDashboard() {
       {company ? (
         <>
           {/* Header */}
-          <div className="flex flex-col space-y-8">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-6">
-                <div className="flex h-24 w-24 items-center justify-center rounded-lg border bg-muted p-2">
-                  <img
-                    src={company.logo || "/placeholder.svg"}
-                    alt={company.name}
-                    className="h-20 w-20 object-contain"
-                  />
-                </div>
-                <div>
-                  <h1 className="text-3xl font-bold tracking-tight">{company.name}</h1>
-                  <p className="text-muted-foreground">Manage your jobs and company profile</p>
-                  <div className="mt-2 flex flex-wrap gap-2">
-                    <Badge variant="secondary">{company.industry}</Badge>
-                    <Badge variant="secondary">{company.size}</Badge>
-                    <Badge variant="secondary">{company.location}</Badge>
-                  </div>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 sm:gap-8">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6 w-full">
+              <div className="flex h-24 w-24 items-center justify-center rounded-lg border bg-muted p-2 mx-auto sm:mx-0">
+                <img
+                  src={getLogoUrl(company.logo)}
+                  alt={company.name}
+                  className="h-20 w-20 object-contain"
+                />
+              </div>
+              <div className="flex-1 text-center sm:text-left">
+                <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">{company.name}</h1>
+                <p className="text-muted-foreground">Manage your jobs and company profile</p>
+                <div className="mt-2 flex flex-wrap justify-center sm:justify-start gap-2">
+                  <Badge variant="secondary">{company.industry}</Badge>
+                  <Badge variant="secondary">{company.size}</Badge>
+                  <Badge variant="secondary">{company.location}</Badge>
                 </div>
               </div>
-              <div className="flex items-center space-x-4">
-                <Button 
-                  variant="outline" 
-                  size="icon" 
-                  onClick={() => fetchProfile()}
-                  disabled={refreshing}
-                >
-                  <Loader2 className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
-                </Button>
-                <Button asChild>
-                  <Link href="/employer/post-job">
-                    <Plus className="mr-2 h-4 w-4" />
-                    Post New Job
-                  </Link>
-                </Button>
+            </div>
+            <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto mt-4 sm:mt-0">
+              <Button 
+                variant="outline" 
+                size="icon" 
+                onClick={() => fetchProfile()}
+                disabled={refreshing}
+                className="w-10 h-10"
+              >
+                <Loader2 className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
+              </Button>
+              <Button asChild className="w-full sm:w-auto">
+                <Link href="/employer/post-job">
+                  <Plus className="mr-2 h-4 w-4" />
+                  Post New Job
+                </Link>
+              </Button>
+            </div>
+          </div>
+
+          {/* Stats Cards */}
+          <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Active Jobs</CardTitle>
+                <Briefcase className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{stats.activeJobs}</div>
+                <p className="text-xs text-muted-foreground">
+                  {stats.newApplications ? `+${stats.newApplications} new applications` : "Currently accepting applications"}
+                </p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Total Applications</CardTitle>
+                <Users className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{stats.totalApplications}</div>
+                <p className="text-xs text-muted-foreground">Across all job postings</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Total Views</CardTitle>
+                <Eye className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{stats.totalViews || stats.viewsToday}</div>
+                <p className="text-xs text-muted-foreground">
+                  {stats.totalViews ? "All time views" : "Views today"}
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Main Content */}
+          <Tabs defaultValue="overview" className="space-y-4">
+            <TabsList>
+              <TabsTrigger value="overview">Overview</TabsTrigger>
+              <TabsTrigger value="company">Company</TabsTrigger>
+              <TabsTrigger value="jobs">Jobs</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="overview" className="space-y-4">
+              <div className="grid gap-4 md:grid-cols-2">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Quick Actions</CardTitle>
+                    <CardDescription>Common tasks for employers</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-2">
+                    <Button asChild className="w-full justify-start">
+                      <Link href="/employer/post-job">
+                        <Plus className="mr-2 h-4 w-4" />
+                        Post a New Job
+                      </Link>
+                    </Button>
+                    <Button variant="outline" asChild className="w-full justify-start">
+                      <Link href="/employer/jobs">
+                        <Briefcase className="mr-2 h-4 w-4" />
+                        Manage Jobs
+                      </Link>
+                    </Button>
+                    <Button variant="outline" asChild className="w-full justify-start">
+                      <Link href="/employer/applications">
+                        <Users className="mr-2 h-4 w-4" />
+                        View Applications
+                      </Link>
+                    </Button>
+                    <Button variant="outline" asChild className="w-full justify-start">
+                      <Link href="/employer/company/profile">
+                        <Edit className="mr-2 h-4 w-4" />
+                        Edit Company Profile
+                      </Link>
+                    </Button>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Company Overview</CardTitle>
+                    <CardDescription>Your company information</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="flex items-center space-x-4">
+                      <div className="flex h-16 w-16 items-center justify-center rounded-lg border bg-muted p-2">
+                        <img
+                          src={getLogoUrl(company.logo)}
+                          alt={company.name}
+                          className="h-14 w-14 object-contain"
+                        />
+                      </div>
+                      <div>
+                        <h3 className="font-medium">{company.name}</h3>
+                        <p className="text-sm text-muted-foreground">{company.description}</p>
+                      </div>
+                    </div>
+                    <div className="grid gap-2">
+                      <div className="flex items-center space-x-2">
+                        <Building className="h-4 w-4 text-muted-foreground" />
+                        <span className="text-sm">{company.industry}</span>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <MapPin className="h-4 w-4 text-muted-foreground" />
+                        <span className="text-sm">{company.location}</span>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Users className="h-4 w-4 text-muted-foreground" />
+                        <span className="text-sm">{company.size}</span>
+                      </div>
+                      {company.website && (
+                        <div className="flex items-center space-x-2">
+                          <Globe className="h-4 w-4 text-muted-foreground" />
+                          <a
+                            href={company.website}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-sm text-blue-600 hover:underline"
+                          >
+                            {company.website}
+                          </a>
+                        </div>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
               </div>
-            </div>
+            </TabsContent>
 
-            {/* Stats Cards */}
-            <div className="grid gap-4 md:grid-cols-3">
+            <TabsContent value="jobs" className="space-y-4">
               <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Active Jobs</CardTitle>
-                  <Briefcase className="h-4 w-4 text-muted-foreground" />
+                <CardHeader>
+                  <CardTitle>Your Job Postings</CardTitle>
+                  <CardDescription>Manage your active and inactive job listings</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">{stats.activeJobs}</div>
-                  <p className="text-xs text-muted-foreground">
-                    {stats.newApplications ? `+${stats.newApplications} new applications` : "Currently accepting applications"}
-                  </p>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Total Applications</CardTitle>
-                  <Users className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">{stats.totalApplications}</div>
-                  <p className="text-xs text-muted-foreground">Across all job postings</p>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Total Views</CardTitle>
-                  <Eye className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">{stats.totalViews || stats.viewsToday}</div>
-                  <p className="text-xs text-muted-foreground">
-                    {stats.totalViews ? "All time views" : "Views today"}
-                  </p>
-                </CardContent>
-              </Card>
-            </div>
-
-            {/* Main Content */}
-            <Tabs defaultValue="overview" className="space-y-4">
-              <TabsList>
-                <TabsTrigger value="overview">Overview</TabsTrigger>
-                <TabsTrigger value="company">Company</TabsTrigger>
-                <TabsTrigger value="jobs">Jobs</TabsTrigger>
-              </TabsList>
-
-              <TabsContent value="overview" className="space-y-4">
-                <div className="grid gap-4 md:grid-cols-2">
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Quick Actions</CardTitle>
-                      <CardDescription>Common tasks for employers</CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-2">
-                      <Button asChild className="w-full justify-start">
+                  {company.jobs && company.jobs.length > 0 ? (
+                    <div className="space-y-4">
+                      {company.jobs.map((job: any) => (
+                        <div key={job._id} className="flex items-center justify-between border-b pb-4 last:border-0">
+                          <div>
+                            <h3 className="font-medium">{job.title}</h3>
+                            <p className="text-sm text-muted-foreground">{job.location}</p>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <Badge variant={job.isActive ? "default" : "secondary"}>
+                              {job.isActive ? "Active" : "Inactive"}
+                            </Badge>
+                            <Button variant="ghost" size="sm" asChild>
+                              <Link href={`/employer/jobs/${job._id}`}>View</Link>
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-8">
+                      <Briefcase className="mx-auto h-12 w-12 text-muted-foreground" />
+                      <h3 className="mt-4 text-lg font-semibold">No jobs posted yet</h3>
+                      <p className="text-muted-foreground">Start by posting your first job to attract candidates.</p>
+                      <Button asChild className="mt-4">
                         <Link href="/employer/post-job">
                           <Plus className="mr-2 h-4 w-4" />
-                          Post a New Job
+                          Post Your First Job
                         </Link>
                       </Button>
-                      <Button variant="outline" asChild className="w-full justify-start">
-                        <Link href="/employer/jobs">
-                          <Briefcase className="mr-2 h-4 w-4" />
-                          Manage Jobs
-                        </Link>
-                      </Button>
-                      <Button variant="outline" asChild className="w-full justify-start">
-                        <Link href="/employer/applications">
-                          <Users className="mr-2 h-4 w-4" />
-                          View Applications
-                        </Link>
-                      </Button>
-                      <Button variant="outline" asChild className="w-full justify-start">
-                        <Link href="/employer/company/profile">
-                          <Edit className="mr-2 h-4 w-4" />
-                          Edit Company Profile
-                        </Link>
-                      </Button>
-                    </CardContent>
-                  </Card>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </TabsContent>
 
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Company Overview</CardTitle>
-                      <CardDescription>Your company information</CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                      <div className="flex items-center space-x-4">
-                        <div className="flex h-16 w-16 items-center justify-center rounded-lg border bg-muted p-2">
-                          <img
-                            src={company.logo || "/placeholder.svg"}
-                            alt={company.name}
-                            className="h-14 w-14 object-contain"
-                          />
-                        </div>
-                        <div>
-                          <h3 className="font-medium">{company.name}</h3>
-                          <p className="text-sm text-muted-foreground">{company.description}</p>
-                        </div>
+            <TabsContent value="company" className="space-y-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Company Profile</CardTitle>
+                  <CardDescription>Manage your company information and settings</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <div className="flex items-center space-x-6">
+                    <div className="flex h-32 w-32 items-center justify-center rounded-lg border bg-muted p-2">
+                      <img
+                        src={getLogoUrl(company.logo)}
+                        alt={company.name}
+                        className="h-28 w-28 object-contain"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <h3 className="text-xl font-semibold">{company.name}</h3>
+                      <p className="text-sm text-muted-foreground">{company.description}</p>
+                      <div className="flex flex-wrap gap-2">
+                        <Badge variant="secondary">{company.industry}</Badge>
+                        <Badge variant="secondary">{company.size}</Badge>
+                        <Badge variant="secondary">{company.location}</Badge>
                       </div>
-                      <div className="grid gap-2">
+                    </div>
+                  </div>
+                  <div className="grid gap-4 md:grid-cols-2">
+                    <div className="space-y-2">
+                      <h4 className="font-medium">Company Details</h4>
+                      <div className="space-y-2">
                         <div className="flex items-center space-x-2">
                           <Building className="h-4 w-4 text-muted-foreground" />
                           <span className="text-sm">{company.industry}</span>
@@ -332,134 +436,30 @@ export default function EmployerDashboard() {
                           </div>
                         )}
                       </div>
-                    </CardContent>
-                  </Card>
-                </div>
-              </TabsContent>
-
-              <TabsContent value="jobs" className="space-y-4">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Your Job Postings</CardTitle>
-                    <CardDescription>Manage your active and inactive job listings</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    {company.jobs && company.jobs.length > 0 ? (
-                      <div className="space-y-4">
-                        {company.jobs.map((job: any) => (
-                          <div key={job._id} className="flex items-center justify-between border-b pb-4 last:border-0">
-                            <div>
-                              <h3 className="font-medium">{job.title}</h3>
-                              <p className="text-sm text-muted-foreground">{job.location}</p>
-                            </div>
-                            <div className="flex items-center space-x-2">
-                              <Badge variant={job.isActive ? "default" : "secondary"}>
-                                {job.isActive ? "Active" : "Inactive"}
-                              </Badge>
-                              <Button variant="ghost" size="sm" asChild>
-                                <Link href={`/employer/jobs/${job._id}`}>View</Link>
-                              </Button>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    ) : (
-                      <div className="text-center py-8">
-                        <Briefcase className="mx-auto h-12 w-12 text-muted-foreground" />
-                        <h3 className="mt-4 text-lg font-semibold">No jobs posted yet</h3>
-                        <p className="text-muted-foreground">Start by posting your first job to attract candidates.</p>
-                        <Button asChild className="mt-4">
-                          <Link href="/employer/post-job">
-                            <Plus className="mr-2 h-4 w-4" />
-                            Post Your First Job
-                          </Link>
-                        </Button>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              </TabsContent>
-
-              <TabsContent value="company" className="space-y-4">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Company Profile</CardTitle>
-                    <CardDescription>Manage your company information and settings</CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-6">
-                    <div className="flex items-center space-x-6">
-                      <div className="flex h-32 w-32 items-center justify-center rounded-lg border bg-muted p-2">
-                        <img
-                          src={company.logo || "/placeholder.svg"}
-                          alt={company.name}
-                          className="h-28 w-28 object-contain"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <h3 className="text-xl font-semibold">{company.name}</h3>
-                        <p className="text-sm text-muted-foreground">{company.description}</p>
-                        <div className="flex flex-wrap gap-2">
-                          <Badge variant="secondary">{company.industry}</Badge>
-                          <Badge variant="secondary">{company.size}</Badge>
-                          <Badge variant="secondary">{company.location}</Badge>
-                        </div>
-                      </div>
                     </div>
-                    <div className="grid gap-4 md:grid-cols-2">
-                      <div className="space-y-2">
-                        <h4 className="font-medium">Company Details</h4>
-                        <div className="space-y-2">
-                          <div className="flex items-center space-x-2">
-                            <Building className="h-4 w-4 text-muted-foreground" />
-                            <span className="text-sm">{company.industry}</span>
-                          </div>
-                          <div className="flex items-center space-x-2">
-                            <MapPin className="h-4 w-4 text-muted-foreground" />
-                            <span className="text-sm">{company.location}</span>
-                          </div>
-                          <div className="flex items-center space-x-2">
-                            <Users className="h-4 w-4 text-muted-foreground" />
-                            <span className="text-sm">{company.size}</span>
-                          </div>
-                          {company.website && (
-                            <div className="flex items-center space-x-2">
-                              <Globe className="h-4 w-4 text-muted-foreground" />
-                              <a
-                                href={company.website}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-sm text-blue-600 hover:underline"
-                              >
-                                {company.website}
-                              </a>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                      <div className="space-y-2">
-                        <h4 className="font-medium">About {company.name}</h4>
-                        <p className="text-sm text-muted-foreground">{company.description}</p>
-                      </div>
+                    <div className="space-y-2">
+                      <h4 className="font-medium">About {company.name}</h4>
+                      <p className="text-sm text-muted-foreground">{company.description}</p>
                     </div>
-                    <div className="flex space-x-2">
-                      <Button asChild>
-                        <Link href="/employer/company/profile">
-                          <Edit className="mr-2 h-4 w-4" />
-                          Edit Profile
-                        </Link>
-                      </Button>
-                      <Button variant="outline" asChild>
-                        <Link href="/employer/company/settings">
-                          <Settings className="mr-2 h-4 w-4" />
-                          Settings
-                        </Link>
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              </TabsContent>
-            </Tabs>
-          </div>
+                  </div>
+                  <div className="flex space-x-2">
+                    <Button asChild>
+                      <Link href="/employer/company/profile">
+                        <Edit className="mr-2 h-4 w-4" />
+                        Edit Profile
+                      </Link>
+                    </Button>
+                    <Button variant="outline" asChild>
+                      <Link href="/employer/company/settings">
+                        <Settings className="mr-2 h-4 w-4" />
+                        Settings
+                      </Link>
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+          </Tabs>
         </>
       ) : (
         <div className="text-center py-12">

@@ -49,6 +49,50 @@ export async function applyForJob(jobId: string, formData: FormData) {
   }
 }
 
+export interface ICompany {
+  _id: string;
+  name: string;
+  website?: string;
+  description?: string;
+  industry?: string;
+  size?: string;
+  location?: string;
+  foundedYear?: number;
+  owner: string;
+  jobs: string[];
+  logo?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export async function getAllCompanies(): Promise<{ success: boolean; companies?: ICompany[]; message?: string }> {
+  try {
+    const response = await fetch('/api/companies', {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    })
+
+    const data = await response.json()
+
+    if (!response.ok) {
+      throw new Error(data.message || 'Failed to fetch companies')
+    }
+
+    return {
+      success: true,
+      companies: data.companies
+    }
+  } catch (error: any) {
+    console.error('Error fetching companies:', error)
+    return {
+      success: false,
+      message: error.message || 'An error occurred while fetching companies',
+    }
+  }
+}
+
 export async function getEmployerProfile() {
   try {
     const response = await fetch('/api/employer/profile', {
@@ -86,16 +130,41 @@ export async function createCompanyProfile(profileData: {
   description?: string;
   location?: string;
   foundedYear?: number;
+  logo?: File | null;
 }) {
   try {
-    console.log("Sending company profile data:", profileData)
+    console.log("Sending company profile data:", {
+      ...profileData,
+      logo: profileData.logo ? {
+        name: profileData.logo.name,
+        type: profileData.logo.type,
+        size: profileData.logo.size
+      } : null
+    })
+
+    const formData = new FormData()
+    formData.append("data", JSON.stringify({
+      name: profileData.name,
+      website: profileData.website,
+      size: profileData.size,
+      industry: profileData.industry,
+      description: profileData.description,
+      location: profileData.location,
+      foundedYear: profileData.foundedYear,
+    }))
+
+    if (profileData.logo) {
+      console.log("Appending logo file:", {
+        name: profileData.logo.name,
+        type: profileData.logo.type,
+        size: profileData.logo.size
+      })
+      formData.append("logo", profileData.logo)
+    }
 
     const response = await fetch('/api/employer/profile', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(profileData),
+      body: formData,
     })
 
     const data = await response.json()
@@ -138,12 +207,24 @@ export async function postJob(jobData: {
   logoFile?: File | null;
 }) {
   try {
-    console.log("Sending job data:", jobData)
+    console.log("Sending job data:", {
+      ...jobData,
+      logoFile: jobData.logoFile ? {
+        name: jobData.logoFile.name,
+        type: jobData.logoFile.type,
+        size: jobData.logoFile.size
+      } : null
+    })
 
     const formData = new FormData()
     formData.append("data", JSON.stringify(jobData))
     
     if (jobData.logoFile) {
+      console.log("Appending logo file:", {
+        name: jobData.logoFile.name,
+        type: jobData.logoFile.type,
+        size: jobData.logoFile.size
+      })
       formData.append("logo", jobData.logoFile)
     }
 
@@ -322,11 +403,13 @@ export async function updateCompanyLogo(companyId: string, logoFile: File) {
       body: formData,
     })
 
-    const data = await response.json()
-
     if (!response.ok) {
+      const data = await response.json()
       throw new Error(data.message || 'Failed to update company logo')
     }
+
+    const data = await response.json()
+    console.log("Logo update response:", data)
 
     return {
       success: true,

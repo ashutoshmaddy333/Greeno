@@ -30,7 +30,7 @@ const FactoryWorkerForm: React.FC = () => {
   };
 
   return (
-    <div className="max-w-xl mx-auto p-6 bg-white shadow-md rounded-lg">
+    <div className="w-full max-w-xl mx-auto px-2 sm:px-4 py-8 sm:py-12 bg-white shadow-md rounded-lg">
       <h2 className="text-2xl font-semibold mb-4">Factory Worker Application Form</h2>
       <form onSubmit={handleSubmit} className="space-y-4">
         

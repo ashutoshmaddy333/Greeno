@@ -214,7 +214,6 @@ export default function JobsPage() {
       throw error
     }
   }
-
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault()
     setCurrentPage(1)
@@ -243,9 +242,9 @@ export default function JobsPage() {
   }
 
   return (
-    <div className="container py-8">
-      <div className="flex flex-col gap-6">
-        <form onSubmit={handleSearch} className="flex gap-2">
+    <div className="container py-8 px-2 sm:px-4">
+      <div className="flex flex-col gap-4 sm:gap-6">
+        <form onSubmit={handleSearch} className="flex flex-col gap-2 sm:flex-row sm:gap-2">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
@@ -253,14 +252,15 @@ export default function JobsPage() {
               placeholder="Search jobs..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-9"
+              className="pl-9 w-full"
             />
           </div>
-          <Button type="submit">Search</Button>
+          <Button type="submit" className="w-full sm:w-auto">Search</Button>
           <Button
             type="button"
             variant="outline"
             onClick={() => setShowFilters(!showFilters)}
+            className="w-full sm:w-auto"
           >
             <Filter className="mr-2 h-4 w-4" />
             Filters
@@ -269,8 +269,8 @@ export default function JobsPage() {
 
         {showFilters && (
           <Card className="mb-6">
-            <CardContent className="p-6">
-              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+            <CardContent className="p-4 sm:p-6">
+              <div className="grid gap-4 sm:gap-6 sm:grid-cols-2 lg:grid-cols-4">
                 <div className="space-y-2">
                   <Label>Location</Label>
                   <Input
@@ -347,7 +347,7 @@ export default function JobsPage() {
                   </Select>
                 </div>
               </div>
-              <div className="mt-4 flex items-center space-x-2">
+              <div className="mt-4 flex flex-col sm:flex-row items-center space-y-2 sm:space-y-0 sm:space-x-2">
                 <Checkbox
                   id="remote"
                   checked={filters.remote}
@@ -362,11 +362,11 @@ export default function JobsPage() {
         )}
 
         {loading ? (
-          <div className="flex justify-center items-center min-h-[60vh]">
+          <div className="flex justify-center items-center min-h-[40vh] sm:min-h-[60vh]">
             <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
           </div>
         ) : error ? (
-          <div className="text-center py-12">
+          <div className="text-center py-8 sm:py-12">
             <h3 className="text-lg font-medium text-destructive">{error}</h3>
             <Button
               variant="outline"
@@ -380,7 +380,7 @@ export default function JobsPage() {
             </Button>
           </div>
         ) : jobs.length === 0 ? (
-          <div className="text-center py-12">
+          <div className="text-center py-8 sm:py-12">
             <h3 className="text-lg font-medium">No jobs found</h3>
             <p className="text-muted-foreground">
               Try adjusting your search or filter criteria
@@ -388,29 +388,61 @@ export default function JobsPage() {
           </div>
         ) : (
           <>
-            <div className="grid gap-6">
-              {jobs.map((job) => (
-                <JobCard
-                  key={job.id}
-                  id={job.id}
-                  title={job.title}
-                  company={job.company.name}
-                  location={job.remote ? "Remote" : job.location}
-                  type={job.type}
-                  salary={job.salary}
-                  posted={job.posted}
-                  logo={job.company.logo}
-                  isActive={true}
-                  isSaved={job.isSaved}
-                  isApplied={job.isApplied}
-                  onSave={handleSaveJob}
-                  onApply={handleApplyJob}
-                />
-              ))}
+            <div className="grid gap-4 sm:gap-6">
+              {jobs.map((job) => {
+                // Dynamically parse salary string to {min, max} in INR
+                let salaryObj: { min?: number; max?: number } | undefined = undefined;
+                if (typeof job.salary === 'string' && job.salary.trim() !== '') {
+                  const salaryStr = job.salary.trim();
+                  if (/^\d+-\d+$/.test(salaryStr)) {
+                    // Format: '5-10'
+                    const [minStr, maxStr] = salaryStr.split('-');
+                    const min = parseInt(minStr) * 100000;
+                    const max = parseInt(maxStr) * 100000;
+                    if (!isNaN(min) && !isNaN(max)) {
+                      salaryObj = { min, max };
+                    }
+                  } else if (/^\d+\+$/.test(salaryStr)) {
+                    // Format: '10+'
+                    const min = parseInt(salaryStr);
+                    if (!isNaN(min)) {
+                      salaryObj = { min: min * 100000 };
+                    }
+                  } else if (/^\d+$/.test(salaryStr)) {
+                    // Format: '10' (single value)
+                    const value = parseInt(salaryStr) * 100000;
+                    if (!isNaN(value)) {
+                      salaryObj = { min: value, max: value };
+                    }
+                  }
+                  // You can add more parsing logic here for other formats if needed
+                }
+                // If salary is not specified or invalid, salaryObj remains undefined
+                return (
+                  <JobCard
+                    key={job.id}
+                    id={job.id}
+                    title={job.title}
+                    company={job.company.name}
+                    location={job.remote ? "Remote" : job.location}
+                    type={job.type}
+                    salary={salaryObj}
+                    posted={job.posted}
+                    logo={job.company.logo}
+                    isActive={true}
+                    isSaved={!!job.isSaved}
+                    isApplied={!!job.isApplied}
+                    experienceLevel={job.experienceLevel}
+                    skills={job.skills}
+                    onSave={handleSaveJob}
+                    onApply={() => { window.location.href = `/job/${job.id}`; }}
+                  />
+                );
+              })}
             </div>
 
             {totalPages > 1 && (
-              <div className="flex justify-center gap-2 mt-8">
+              <div className="flex flex-wrap justify-center gap-2 mt-8">
                 <Button
                   variant="outline"
                   onClick={() => handlePageChange(currentPage - 1)}

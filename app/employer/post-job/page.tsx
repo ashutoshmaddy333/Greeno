@@ -16,16 +16,29 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { ArrowLeft, ArrowRight, Calendar, CheckCircle, DollarSign, Globe, Info, MapPin, Upload } from "lucide-react"
 import { showToast } from "@/lib/toast"
 import { postJob, getEmployerProfile } from "@/lib/actions"
+import { getLogoUrl } from "@/lib/utils"
+
+interface CompanyProfile {
+  id: string
+  name: string
+  website?: string
+  size?: string
+  industry?: string
+  description?: string
+  logo?: string
+  createdAt: string
+  updatedAt: string
+}
 
 export default function PostJobPage() {
   const router = useRouter()
   const [currentStep, setCurrentStep] = useState(1)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isSubmitted, setIsSubmitted] = useState(false)
+  const [profileLoading, setProfileLoading] = useState(true)
+  const [companyProfile, setCompanyProfile] = useState<CompanyProfile | null>(null)
   const [logoFile, setLogoFile] = useState<File | null>(null)
   const [logoPreview, setLogoPreview] = useState<string | null>(null)
-  const [companyProfile, setCompanyProfile] = useState(null)
-  const [profileLoading, setProfileLoading] = useState(true)
   const [formData, setFormData] = useState({
     title: "",
     company: "",
@@ -64,6 +77,10 @@ export default function PostJobPage() {
             companyIndustry: result.company.industry || "",
             companyDescription: result.company.description || "",
           }))
+          // Set logo preview if company has a logo
+          if (result.company.logo) {
+            setLogoPreview(getLogoUrl(result.company.logo))
+          }
         } else {
           // Redirect to dashboard if no company profile
           router.push("/employer?message=create-company-first")
@@ -203,10 +220,10 @@ export default function PostJobPage() {
         setIsSubmitting(false)
         setIsSubmitted(true)
 
-        // Reset form
-        setFormData({
+        // Reset form but keep company profile data
+        setFormData((prev) => ({
+          ...prev,
           title: "",
-          company: "",
           location: "",
           type: "",
           salary: "",
@@ -220,13 +237,14 @@ export default function PostJobPage() {
           experienceLevel: "",
           educationLevel: "",
           skills: "",
-          companyWebsite: "",
-          companySize: "",
-          companyIndustry: "",
-          companyDescription: "",
-        })
-        setLogoFile(null)
-        setLogoPreview(null)
+        }))
+        // Don't reset logo if it's from company profile
+        if (!companyProfile?.logo) {
+          setLogoFile(null)
+          setLogoPreview(null)
+        } else {
+          setLogoPreview(getLogoUrl(companyProfile.logo))
+        }
       } else {
         showToast.dismiss(loadingToast)
         throw new Error(result.message || "Failed to post job")
@@ -691,7 +709,7 @@ export default function PostJobPage() {
                       {logoPreview ? (
                         <div className="flex flex-col items-center gap-4">
                           <img
-                            src={logoPreview || "/placeholder.svg"}
+                            src={logoPreview}
                             alt="Logo Preview"
                             className="h-20 w-20 object-contain"
                           />
@@ -701,7 +719,7 @@ export default function PostJobPage() {
                             size="sm"
                             onClick={() => {
                               setLogoFile(null)
-                              setLogoPreview(null)
+                              setLogoPreview(companyProfile?.logo ? getLogoUrl(companyProfile.logo) : null)
                             }}
                             className="button-3d border-primary/20"
                           >

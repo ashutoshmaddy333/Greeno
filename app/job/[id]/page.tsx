@@ -123,7 +123,7 @@ function formatSalary(min: number, max: number) {
   }
   const minLakhs = Math.round(min / 100000)
   const maxLakhs = Math.round(max / 100000)
-  return `${minLakhs}L-${maxLakhs}L`
+  return `Salary specified: ${minLakhs}L - ${maxLakhs}L`
 }
 
 export default function JobDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -496,7 +496,7 @@ export default function JobDetailPage({ params }: { params: Promise<{ id: string
                       </Badge>
                     )}
                     <Badge variant="outline" className="rounded-md">
-                      <span>{job.salary.min} - {job.salary.max}</span>
+                      <span>{formatSalary(job.salary.min, job.salary.max)}</span>
                     </Badge>
                     <Badge variant="outline" className="rounded-md">
                       <Clock className="mr-1 h-3 w-3" />

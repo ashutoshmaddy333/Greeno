@@ -244,7 +244,7 @@ export default function CompanyPage() {
                                 Remote
                               </Badge>
                             )}
-                            <Badge variant="outline">{job.salary}</Badge>
+                            <Badge variant="outline">{job.salary ? `Salary specified: ${job.salary}` : 'Salary not specified'}</Badge>
                             {job.experienceLevel && (
                               <Badge variant="outline">{job.experienceLevel}</Badge>
                             )}

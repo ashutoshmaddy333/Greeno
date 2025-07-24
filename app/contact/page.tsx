@@ -106,8 +106,8 @@ export default function ContactPage() {
                   </div>
                   <div>
                     <h3 className="font-medium">Phone</h3>
-                    <p className="text-sm text-muted-foreground">+91 74288-26680</p>
-                    <p className="text-sm text-muted-foreground">+91 74288-26681</p>
+                    <p className="text-sm text-muted-foreground">+91 9211490072</p>
+                    <p className="text-sm text-muted-foreground">+91 9211570072</p>
                   </div>
                 </div>
                 <div className="flex items-start gap-3 sm:gap-4">

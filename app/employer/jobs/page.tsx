@@ -226,7 +226,7 @@ export default function EmployerJobsPage() {
                           </td>
                           <td className="px-4 py-3 text-sm text-muted-foreground">
                             <div className="flex items-center">
-                              <span>{job.salary}</span>
+                              <span>{job.salary ? `Salary specified: ${job.salary}` : 'Salary not specified'}</span>
                             </div>
                           </td>
                           <td className="px-4 py-3 text-sm text-muted-foreground">
@@ -337,7 +337,7 @@ export default function EmployerJobsPage() {
                             {job.location}
                           </div>
                           <div className="flex items-center text-sm text-muted-foreground">
-                            <span>{job.salary}</span>
+                            <span>{job.salary ? `Salary specified: ${job.salary}` : 'Salary not specified'}</span>
                           </div>
                           <div className="flex items-center">
                             <Clock className="mr-1 h-3 w-3" />

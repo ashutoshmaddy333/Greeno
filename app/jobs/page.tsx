@@ -426,7 +426,7 @@ export default function JobsPage() {
                     company={job.company.name}
                     location={job.remote ? "Remote" : job.location}
                     type={job.type}
-                    salary={salaryObj}
+                    salary={job.salary || salaryObj}
                     posted={job.posted}
                     logo={job.company.logo}
                     isActive={true}

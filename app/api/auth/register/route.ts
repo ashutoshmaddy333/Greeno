@@ -5,10 +5,11 @@ import { User } from "@/models/User"
 import { storeOTP } from "@/lib/otp"
 import { sendOTPEmail } from "@/lib/email"
 
-dbConnect()
+// Removed: dbConnect()
 
 export async function POST(request: Request) {
   try {
+    await dbConnect(); // Ensure DB connection before any DB operation
     const reqBody = await request.json()
     console.log("Registration request body:", { ...reqBody, password: "[REDACTED]" })
     const { name, email, password, role } = reqBody

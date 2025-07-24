@@ -258,8 +258,9 @@ export default function AdminJobs() {
                     </TableCell>
                     <TableCell>
                       <span className="text-sm">
-                        {job.salary.currency} {job.salary.min.toLocaleString()} -{" "}
-                        {job.salary.max.toLocaleString()}
+                        {job.salary && job.salary.min && job.salary.max && job.salary.min > 0 && job.salary.max > 0
+                          ? `Salary specified: ${job.salary.currency} ${job.salary.min.toLocaleString()} - ${job.salary.max.toLocaleString()}`
+                          : 'Salary not specified'}
                       </span>
                     </TableCell>
                     <TableCell>

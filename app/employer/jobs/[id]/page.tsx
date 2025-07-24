@@ -314,7 +314,7 @@ export default function JobDetailPage({ params }: { params: Promise<{ id: string
                     {job.location}
                   </span>
                   <span className="flex items-center">
-                    <span>{job.salary}</span>
+                    <span>{job.salary ? `Salary specified: ${job.salary}` : 'Salary not specified'}</span>
                   </span>
                   <span className="flex items-center">
                     <Clock className="mr-1 h-4 w-4" />
@@ -616,7 +616,7 @@ export default function JobDetailPage({ params }: { params: Promise<{ id: string
                   <div className="flex items-start space-x-3">
                     <div>
                       <p className="text-sm font-medium">Salary Range</p>
-                      <p className="text-sm text-muted-foreground">{job.salary}</p>
+                      <p className="text-sm text-muted-foreground">{job.salary ? `Salary specified: ${job.salary}` : 'Salary not specified'}</p>
                     </div>
                   </div>
                   <div className="flex items-start space-x-3">

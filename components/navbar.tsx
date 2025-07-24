@@ -200,9 +200,9 @@ export function Navbar() {
                   </DropdownMenuItem>
                 ) : (
                   <DropdownMenuItem asChild>
-                    <Link href="/admin/dashboard">
+                    <Link href="/profile">
                       <User className="mr-2 h-4 w-4" />
-                      <span>Admin Dashboard</span>
+                      <span>Profile</span>
                     </Link>
                   </DropdownMenuItem>
                 )}

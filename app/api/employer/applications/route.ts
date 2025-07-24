@@ -23,28 +23,36 @@ export async function GET(request: NextRequest) {
 
     // Get all applications for these jobs
     const applications = await Application.find({ job: { $in: jobIds } })
-      .populate("job", "title company")
+      .populate({ path: "job", select: "title company", populate: { path: "company", select: "name" } })
       .populate("applicant", "name email")
-      .sort({ appliedAt: -1 })
+      .sort({ createdAt: -1 })
 
     // Format the response
-    const formattedApplications = applications.map((app) => ({
-      id: app._id,
-      status: app.status,
-      appliedAt: app.appliedAt,
-      resume: app.resume,
-      coverLetter: app.coverLetter,
-      applicant: {
-        id: app.applicant._id,
-        name: app.applicant.name,
-        email: app.applicant.email,
-      },
-      job: {
-        id: app.job._id,
-        title: app.job.title,
-        company: app.job.company,
-      },
-    }))
+    const formattedApplications = applications.map((app) => {
+      const applicant = app.applicant as unknown as { _id: any; name: string; email: string }
+      const job = app.job as unknown as { _id: any; title: string; company: { name: string } }
+      return {
+        id: app._id,
+        status: app.status,
+        appliedAt: (app as any).appliedAt || app.createdAt,
+        resumeFilename: app.resumeFilename,
+        resumeOriginalName: app.resumeOriginalName,
+        resumeMimeType: app.resumeMimeType,
+        resumeSize: app.resumeSize,
+        resumeUrl: app.resumeUrl,
+        coverLetter: app.coverLetter,
+        applicant: {
+          id: applicant._id,
+          name: applicant.name,
+          email: applicant.email,
+        },
+        job: {
+          id: job._id,
+          title: job.title,
+          company: job.company?.name || "Unknown Company",
+        },
+      }
+    })
 
     return NextResponse.json({
       success: true,

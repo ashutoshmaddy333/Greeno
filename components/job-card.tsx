@@ -14,10 +14,7 @@ interface JobCardProps {
   company: string
   location: string
   type: string
-  salary?: {
-    min?: number
-    max?: number
-  }
+  salary?: { min?: number; max?: number } | string
   posted: string
   logo: string
   isActive: boolean
@@ -111,13 +108,18 @@ export default function JobCard({
   }
 
   // Helper function to format salary
-  function formatSalary(min: number | undefined, max: number | undefined) {
-    if (min === undefined || max === undefined || isNaN(min) || isNaN(max) || min === 0 && max === 0) {
+  function renderSalary(salary: JobCardProps["salary"]) {
+    if (typeof salary === "string") {
+      return salary
+    }
+    const min = salary?.min;
+    const max = salary?.max;
+    if (min === undefined || max === undefined || isNaN(min) || isNaN(max) || (min === 0 && max === 0)) {
       return "Salary not specified"
     }
     const minLakhs = Math.round(min / 100000)
     const maxLakhs = Math.round(max / 100000)
-    return `${minLakhs}L-${maxLakhs}L`
+    return `Salary specified: ${minLakhs}L - ${maxLakhs}L`
   }
 
   return (
@@ -204,7 +206,7 @@ export default function JobCard({
           <div className="flex flex-wrap items-center justify-between gap-2 mt-3 sm:mt-4">
             <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
               <IndianRupee className="h-4 w-4" />
-              <span>{formatSalary(salary?.min, salary?.max)}</span>
+              <span>{renderSalary(salary)}</span>
             </div>
             <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
               {Boolean(onSave) && (

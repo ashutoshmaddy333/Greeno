@@ -47,6 +47,14 @@ interface FacebookUser {
   email: string
 }
 
+/** OAuth token response from `google.accounts.oauth2` Token Client */
+type GoogleTokenResponse = {
+  access_token?: string
+  error?: string
+  error_description?: string
+  error_uri?: string
+}
+
 // Add type declarations for external SDKs
 declare global {
   interface Window {
@@ -56,9 +64,9 @@ declare global {
           initTokenClient: (config: {
             client_id: string
             scope: string
-            callback: (response: { access_token: string; error?: string }) => void
+            callback: (response: GoogleTokenResponse) => void
           }) => {
-            requestAccessToken: () => void
+            requestAccessToken: (overrideConfig?: { prompt?: string }) => void
           }
         }
       }
@@ -232,23 +240,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           throw new Error("Google client failed to load")
         }
 
-        // Initialize Google client
+        if (!process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID) {
+          throw new Error("Missing NEXT_PUBLIC_GOOGLE_CLIENT_ID")
+        }
+
+        // Token client: origins/redirect URIs are configured in Google Cloud Console (not via redirect_uri here).
         const client = window.google.accounts.oauth2.initTokenClient({
-          client_id: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID!,
-          scope: "email profile",
-          callback: async (response) => {
+          client_id: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID,
+          scope:
+            "https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile",
+          callback: async (response: GoogleTokenResponse) => {
             if (response.error) {
-              throw new Error(response.error)
+              const detail =
+                response.error_description ||
+                (response.error === "redirect_uri_mismatch"
+                  ? "Add Authorized JavaScript origins + Authorized redirect URIs in Google Cloud Console (include this origin and postmessage)."
+                  : response.error)
+              console.error("Google Token Client error:", response)
+              throw new Error(detail)
+            }
+            if (!response.access_token) {
+              throw new Error("No access token from Google")
             }
             accessToken = response.access_token
 
-            // Get user info using the access token
-            const userInfoResponse = await fetch(
-              "https://www.googleapis.com/oauth2/v3/userinfo",
-              {
-                headers: { Authorization: `Bearer ${accessToken}` },
-              }
-            )
+            const userInfoResponse = await fetch("https://www.googleapis.com/oauth2/v3/userinfo", {
+              headers: { Authorization: `Bearer ${accessToken}` },
+            })
             const userInfo = await userInfoResponse.json()
 
             userData = {

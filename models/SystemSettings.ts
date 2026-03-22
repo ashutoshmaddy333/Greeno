@@ -54,8 +54,7 @@ const SystemSettingsSchema = new Schema(
   }
 )
 
-// Add index for faster lookups
-SystemSettingsSchema.index({ key: 1 }, { unique: true })
+// key already has unique: true (unique index). category lookups:
 SystemSettingsSchema.index({ category: 1 })
 
 const SystemSettings = mongoose.models.SystemSettings || mongoose.model<ISystemSettings>("SystemSettings", SystemSettingsSchema)

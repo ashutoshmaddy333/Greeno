@@ -27,7 +27,6 @@ const OTPSchema: Schema = new Schema(
     expiresAt: {
       type: Date,
       required: true,
-      index: true,
     },
   },
   {

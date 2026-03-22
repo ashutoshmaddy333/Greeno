@@ -49,7 +49,6 @@ const jobSeekerSchema = new mongoose.Schema(
       ref: "User",
       required: true,
       unique: true,
-      index: true,
     },
     profilePicture: {
       type: String,

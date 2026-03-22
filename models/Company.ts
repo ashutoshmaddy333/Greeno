@@ -36,7 +36,6 @@ const CompanySchema: Schema = new Schema(
       unique: true,
       lowercase: true,
       trim: true,
-      index: true
     },
     website: {
       type: String,

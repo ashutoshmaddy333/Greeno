@@ -2,23 +2,22 @@ import nodemailer from 'nodemailer';
 import { IApplication } from '@/models/Application';
 import { IJob } from '@/models/Job';
 
-// Create a transporter using environment variables
-const transporter = nodemailer.createTransport({
-  service: process.env.EMAIL_SERVICE || 'gmail',
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASSWORD,
-  },
-});
+// Create a transporter using environment variables (lazy; avoids import-time SMTP calls on serverless)
+function createTransporter() {
+  return nodemailer.createTransport({
+    service: process.env.EMAIL_SERVICE || 'gmail',
+    auth: {
+      user: process.env.EMAIL_USER,
+      pass: process.env.EMAIL_PASSWORD,
+    },
+  });
+}
 
-// Verify transporter connection
-transporter.verify(function (error, success) {
-  if (error) {
-    console.error('Mail service error:', error);
-  } else {
-    console.log('Mail service is ready to send messages');
-  }
-});
+let transporter: ReturnType<typeof nodemailer.createTransport> | null = null;
+function getTransporter() {
+  if (!transporter) transporter = createTransporter();
+  return transporter;
+}
 
 interface EmailOptions {
   to: string;
@@ -40,7 +39,7 @@ async function sendEmail({ to, subject, html }: EmailOptions) {
     html,
   };
 
-  const info = await transporter.sendMail(mailOptions);
+  const info = await getTransporter().sendMail(mailOptions);
   console.log('Email sent:', info.messageId);
   return { success: true as const, messageId: info.messageId };
 }

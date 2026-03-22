@@ -102,6 +102,20 @@ export default function ProfilePage() {
     }
   }, [isAuthenticated, isEmployer])
 
+  // Debug saved jobs
+  useEffect(() => {
+    if (profile?.savedJobs) {
+      console.log("Profile saved jobs updated:", {
+        count: profile.savedJobs.length,
+        jobs: profile.savedJobs.map((job: any) => ({
+          id: job._id,
+          title: job.title,
+          company: job.company?.name
+        }))
+      })
+    }
+  }, [profile?.savedJobs])
+
   const fetchProfile = async () => {
     try {
       setProfileLoading(true)
@@ -324,8 +338,25 @@ export default function ProfilePage() {
 
       // Update profile with new saved jobs
       const updatedProfile = await response.json()
+      console.log("Profile updated after saving job:", {
+        profileId: updatedProfile._id,
+        savedJobsCount: updatedProfile.savedJobs?.length || 0,
+        savedJobs: updatedProfile.savedJobs?.map((job: any) => ({
+          id: job._id,
+          title: job.title,
+          company: job.company?.name
+        })) || []
+      })
+      
       setProfile(updatedProfile)
-      showToast.success("Job saved successfully")
+      
+      // Check if job was saved or unsaved
+      const wasJobSaved = updatedProfile.savedJobs?.some((job: any) => job._id === jobId)
+      if (wasJobSaved) {
+        showToast.success("Job saved successfully")
+      } else {
+        showToast.success("Job removed from saved jobs")
+      }
     } catch (error: any) {
       console.error("Error saving job:", error)
       showToast.error(error.message || "Failed to save job")

@@ -71,12 +71,51 @@ export default function AdminDashboard() {
 
     const fetchDashboardStats = async () => {
       try {
+        console.log("Fetching admin dashboard stats...")
         const response = await fetch("/api/admin/dashboard/stats")
-        if (!response.ok) throw new Error("Failed to fetch dashboard stats")
+        
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}))
+          console.error("Admin dashboard stats error:", {
+            status: response.status,
+            statusText: response.statusText,
+            error: errorData
+          })
+          throw new Error(`Failed to fetch dashboard stats: ${response.status} ${response.statusText}`)
+        }
+        
         const data = await response.json()
+        console.log("Admin dashboard stats fetched successfully:", {
+          totalUsers: data.totalUsers,
+          totalJobs: data.totalJobs,
+          totalApplications: data.totalApplications
+        })
         setStats(data)
       } catch (error) {
         console.error("Error fetching dashboard stats:", error)
+        // Set a default stats object to prevent the page from breaking
+        setStats({
+          totalUsers: 0,
+          totalJobs: 0,
+          totalApplications: 0,
+          totalEmployers: 0,
+          recentUsers: [],
+          recentJobs: [],
+          recentApplications: [],
+          userStats: {
+            jobSeekers: 0,
+            employers: 0,
+            admins: 0,
+            verifiedUsers: 0,
+            unverifiedUsers: 0
+          },
+          jobStats: {
+            active: 0,
+            inactive: 0,
+            totalViews: 0,
+            totalApplications: 0
+          }
+        })
       } finally {
         setIsLoadingStats(false)
       }

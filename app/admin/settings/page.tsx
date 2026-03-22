@@ -17,6 +17,9 @@ interface Setting {
   key: string
   value: any
   description: string
+  category: string
+  type: string
+  isPublic: boolean
   updatedAt: string
 }
 
@@ -40,27 +43,40 @@ export default function AdminSettings() {
     }
   }, [isAdmin])
 
+  // Safety check to ensure settings is always an array
+  const safeSettings = Array.isArray(settings) ? settings : []
+
   const fetchSettings = async () => {
     try {
       setLoading(true)
       const response = await fetch("/api/admin/settings")
       if (!response.ok) throw new Error("Failed to fetch settings")
       const data = await response.json()
-      setSettings(data)
+      
+      // The API returns { settings: [...] }, so we need to extract the settings array
+      if (data.settings && Array.isArray(data.settings)) {
+        setSettings(data.settings)
+      } else {
+        console.error("Invalid settings data format:", data)
+        toast.error("Invalid settings data format")
+        setSettings([])
+      }
     } catch (error) {
       console.error("Error fetching settings:", error)
       toast.error("Failed to fetch settings")
+      setSettings([]) // Set empty array as fallback
     } finally {
       setLoading(false)
     }
   }
 
-  const handleSettingChange = (key: string, value: any) => {
-    setSettings(prev =>
-      prev.map(setting =>
-        setting.key === key ? { ...setting, value } : setting
+  const handleSettingChange = (key: string, value: any, isPublic?: boolean) => {
+    setSettings(prev => {
+      const currentSettings = Array.isArray(prev) ? prev : []
+      return currentSettings.map(setting =>
+        setting.key === key ? { ...setting, value, ...(isPublic !== undefined && { isPublic }) } : setting
       )
-    )
+    })
     setHasChanges(true)
   }
 
@@ -71,14 +87,22 @@ export default function AdminSettings() {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(
-          settings.map(({ key, value }) => ({ key, value }))
+          safeSettings.map(({ key, value }) => ({ key, value }))
         ),
       })
 
       if (!response.ok) throw new Error("Failed to update settings")
 
-      const updatedSettings = await response.json()
-      setSettings(updatedSettings)
+      const data = await response.json()
+      
+      // The API returns { message: "...", updatedSettings: [...] }
+      if (data.updatedSettings && Array.isArray(data.updatedSettings)) {
+        setSettings(data.updatedSettings)
+      } else {
+        // If the API doesn't return updated settings, keep the current state
+        console.log("Settings updated successfully:", data.message)
+      }
+      
       setHasChanges(false)
       toast.success("Settings updated successfully")
     } catch (error) {
@@ -96,14 +120,22 @@ export default function AdminSettings() {
 
     try {
       setSaving(true)
-      const response = await fetch("/api/admin/settings?action=reset", {
+      const response = await fetch("/api/admin/settings", {
         method: "POST",
       })
 
       if (!response.ok) throw new Error("Failed to reset settings")
 
-      const updatedSettings = await response.json()
-      setSettings(updatedSettings)
+      const data = await response.json()
+      
+      // The API returns { message: "...", settings: [...] }
+      if (data.settings && Array.isArray(data.settings)) {
+        setSettings(data.settings)
+      } else {
+        // If the API doesn't return settings, refetch them
+        await fetchSettings()
+      }
+      
       setHasChanges(false)
       toast.success("Settings reset to defaults")
     } catch (error) {
@@ -159,7 +191,7 @@ export default function AdminSettings() {
             </AlertDescription>
           </Alert>
 
-          <div className="grid gap-6 grid-cols-1 md:grid-cols-2">
+          <div className="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
             {/* Job Posting Settings */}
             <Card>
               <CardHeader>
@@ -171,7 +203,7 @@ export default function AdminSettings() {
                   <Label htmlFor="allowJobPosting">Allow Job Posting</Label>
                   <Switch
                     id="allowJobPosting"
-                    checked={settings.find(s => s.key === "allowJobPosting")?.value}
+                    checked={safeSettings.find(s => s.key === "allowJobPosting")?.value}
                     onCheckedChange={(checked) =>
                       handleSettingChange("allowJobPosting", checked)
                     }
@@ -183,7 +215,7 @@ export default function AdminSettings() {
                     id="maxJobsPerEmployer"
                     type="number"
                     min={1}
-                    value={settings.find(s => s.key === "maxJobsPerEmployer")?.value}
+                    value={safeSettings.find(s => s.key === "maxJobsPerEmployer")?.value}
                     onChange={(e) =>
                       handleSettingChange("maxJobsPerEmployer", parseInt(e.target.value))
                     }
@@ -197,7 +229,7 @@ export default function AdminSettings() {
                     type="number"
                     min={0}
                     step={0.01}
-                    value={settings.find(s => s.key === "jobPostingFee")?.value}
+                    value={safeSettings.find(s => s.key === "jobPostingFee")?.value}
                     onChange={(e) =>
                       handleSettingChange("jobPostingFee", parseFloat(e.target.value))
                     }
@@ -218,7 +250,7 @@ export default function AdminSettings() {
                   <Label htmlFor="allowJobApplications">Allow Job Applications</Label>
                   <Switch
                     id="allowJobApplications"
-                    checked={settings.find(s => s.key === "allowJobApplications")?.value}
+                    checked={safeSettings.find(s => s.key === "allowJobApplications")?.value}
                     onCheckedChange={(checked) =>
                       handleSettingChange("allowJobApplications", checked)
                     }
@@ -230,7 +262,7 @@ export default function AdminSettings() {
                     id="maxApplicationsPerJob"
                     type="number"
                     min={1}
-                    value={settings.find(s => s.key === "maxApplicationsPerJob")?.value}
+                    value={safeSettings.find(s => s.key === "maxApplicationsPerJob")?.value}
                     onChange={(e) =>
                       handleSettingChange("maxApplicationsPerJob", parseInt(e.target.value))
                     }
@@ -251,9 +283,40 @@ export default function AdminSettings() {
                   <Label htmlFor="requireEmailVerification">Require Email Verification</Label>
                   <Switch
                     id="requireEmailVerification"
-                    checked={settings.find(s => s.key === "requireEmailVerification")?.value}
+                    checked={safeSettings.find(s => s.key === "requireEmailVerification")?.value}
                     onCheckedChange={(checked) =>
                       handleSettingChange("requireEmailVerification", checked)
+                    }
+                  />
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* General Settings */}
+            <Card>
+              <CardHeader>
+                <CardTitle>General</CardTitle>
+                <CardDescription>General application settings</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="siteName">Site Name</Label>
+                  <Input
+                    id="siteName"
+                    value={safeSettings.find(s => s.key === "siteName")?.value}
+                    onChange={(e) =>
+                      handleSettingChange("siteName", e.target.value)
+                    }
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="contactEmail">Contact Email</Label>
+                  <Input
+                    id="contactEmail"
+                    type="email"
+                    value={safeSettings.find(s => s.key === "contactEmail")?.value}
+                    onChange={(e) =>
+                      handleSettingChange("contactEmail", e.target.value)
                     }
                   />
                 </div>
@@ -271,7 +334,7 @@ export default function AdminSettings() {
                   <Label htmlFor="maintenanceMode">Maintenance Mode</Label>
                   <Switch
                     id="maintenanceMode"
-                    checked={settings.find(s => s.key === "maintenanceMode")?.value}
+                    checked={safeSettings.find(s => s.key === "maintenanceMode")?.value}
                     onCheckedChange={(checked) =>
                       handleSettingChange("maintenanceMode", checked)
                     }
@@ -281,12 +344,36 @@ export default function AdminSettings() {
                   <Label htmlFor="maintenanceMessage">Maintenance Message</Label>
                   <Input
                     id="maintenanceMessage"
-                    value={settings.find(s => s.key === "maintenanceMessage")?.value}
+                    value={safeSettings.find(s => s.key === "maintenanceMessage")?.value}
                     onChange={(e) =>
                       handleSettingChange("maintenanceMessage", e.target.value)
                     }
                   />
                 </div>
+              </CardContent>
+            </Card>
+
+            {/* Public Visibility Settings */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Public Visibility</CardTitle>
+                <CardDescription>Control which settings are visible to users</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {safeSettings.map((setting) => (
+                  <div key={setting.key} className="flex items-center justify-between">
+                    <Label htmlFor={`public-${setting.key}`} className="text-sm">
+                      {setting.description}
+                    </Label>
+                    <Switch
+                      id={`public-${setting.key}`}
+                      checked={setting.isPublic}
+                      onCheckedChange={(checked) =>
+                        handleSettingChange(setting.key, setting.value, checked)
+                      }
+                    />
+                  </div>
+                ))}
               </CardContent>
             </Card>
           </div>

@@ -27,21 +27,22 @@ interface EmailOptions {
 }
 
 async function sendEmail({ to, subject, html }: EmailOptions) {
-  try {
-    const mailOptions = {
-      from: process.env.EMAIL_USER,
-      to,
-      subject,
-      html,
-    };
-
-    const info = await transporter.sendMail(mailOptions);
-    console.log('Email sent:', info.messageId);
-    return { success: true, messageId: info.messageId };
-  } catch (error) {
-    console.error('Error sending email:', error);
-    return { success: false, error };
+  if (!process.env.EMAIL_USER || !process.env.EMAIL_PASSWORD) {
+    const err = new Error('EMAIL_USER and EMAIL_PASSWORD must be set in environment');
+    console.error(err.message);
+    throw err;
   }
+
+  const mailOptions = {
+    from: process.env.EMAIL_FROM || process.env.EMAIL_USER,
+    to,
+    subject,
+    html,
+  };
+
+  const info = await transporter.sendMail(mailOptions);
+  console.log('Email sent:', info.messageId);
+  return { success: true as const, messageId: info.messageId };
 }
 
 export async function sendJobApplicationEmail(application: IApplication, job: IJob) {
@@ -53,108 +54,45 @@ export async function sendJobApplicationEmail(application: IApplication, job: IJ
     <head>
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <title>Application Confirmation</title>
-      <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #1f2937; margin: 0; padding: 0; }
-        .container { max-width: 600px; margin: 0 auto; padding: 40px 20px; }
-        .header { text-align: center; margin-bottom: 40px; }
-        .logo { max-width: 150px; margin-bottom: 20px; }
-        .title { color: #2563eb; font-size: 24px; font-weight: 600; margin: 0 0 10px; }
-        .subtitle { color: #6b7280; font-size: 16px; margin: 0; }
-        .card { background-color: #ffffff; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); padding: 24px; margin-bottom: 24px; }
-        .card-title { color: #1e40af; font-size: 18px; font-weight: 600; margin: 0 0 16px; }
-        .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-        .info-item { margin-bottom: 12px; }
-        .info-label { color: #6b7280; font-size: 14px; margin-bottom: 4px; }
-        .info-value { color: #1f2937; font-size: 15px; font-weight: 500; }
-        .divider { border-top: 1px solid #e5e7eb; margin: 32px 0; }
-        .footer { text-align: center; color: #6b7280; font-size: 13px; }
-        .button { display: inline-block; background-color: #2563eb; color: #ffffff; text-decoration: none; padding: 12px 24px; border-radius: 6px; font-weight: 500; margin-top: 16px; }
-        .status-badge { display: inline-block; background-color: #dbeafe; color: #1e40af; padding: 4px 12px; border-radius: 9999px; font-size: 14px; font-weight: 500; }
-        @media (max-width: 600px) {
-          .info-grid { grid-template-columns: 1fr; }
-          .container { padding: 20px; }
-        }
-      </style>
+      <title>Application Received</title>
     </head>
-    <body>
-      <div class="container">
-        <div class="header">
-          <img src="https://your-logo-url.com/logo.png" alt="Company Logo" class="logo">
-          <h1 class="title">Application Received</h1>
-          <p class="subtitle">Thank you for applying to ${job.company}</p>
+    <body style="margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f4f4f4;">
+      <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; padding: 20px;">
+        <div class="header" style="text-align: center; padding: 20px 0; border-bottom: 1px solid #e0e0e0;">
+          <h1 style="color: #1976d2; margin: 0;">Jobby</h1>
         </div>
-
-        <div class="card">
-          <h2 class="card-title">Application Details</h2>
-          <div class="info-grid">
-            <div class="info-item">
-              <div class="info-label">Position</div>
-              <div class="info-value">${job.title}</div>
-            </div>
-            <div class="info-item">
-              <div class="info-label">Company</div>
-              <div class="info-value">${job.company}</div>
-            </div>
-            <div class="info-item">
-              <div class="info-label">Location</div>
-              <div class="info-value">${job.location}</div>
-            </div>
-            <div class="info-item">
-              <div class="info-label">Employment Type</div>
-              <div class="info-value">${job.employmentType}</div>
-            </div>
-            <div class="info-item">
-              <div class="info-label">Experience Level</div>
-              <div class="info-value">${job.experienceLevel}</div>
-            </div>
-            <div class="info-item">
-              <div class="info-label">Application Status</div>
-              <div class="info-value"><span class="status-badge">Under Review</span></div>
-            </div>
+        
+        <div class="content" style="padding: 30px 20px;">
+          <h2 style="color: #333; margin-bottom: 20px;">Application Received</h2>
+          
+          <p style="color: #666; line-height: 1.6; margin-bottom: 20px;">
+            Hello ${application.name},
+          </p>
+          
+          <p style="color: #666; line-height: 1.6; margin-bottom: 20px;">
+            Thank you for applying to the position of <strong>${job.title}</strong> at <strong>${job.company}</strong>.
+          </p>
+          
+          <div style="background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;">
+            <h3 style="margin: 0 0 15px; color: #333;">Application Details</h3>
+            <p style="margin: 0 0 8px; color: #666;"><strong>Position:</strong> ${job.title}</p>
+            <p style="margin: 0 0 8px; color: #666;"><strong>Company:</strong> ${job.company}</p>
+            <p style="margin: 0 0 8px; color: #666;"><strong>Location:</strong> ${job.location}</p>
+            <p style="margin: 0 0 8px; color: #666;"><strong>Application Date:</strong> ${new Date(application.createdAt).toLocaleDateString()}</p>
           </div>
+          
+          <p style="color: #666; line-height: 1.6; margin-bottom: 20px;">
+            We have received your application and will review it carefully. Our hiring team will contact you if your profile matches our requirements.
+          </p>
+          
+          <p style="color: #666; line-height: 1.6; margin-bottom: 0;">
+            Thank you for your interest in joining our team!
+          </p>
         </div>
-
-        <div class="card">
-          <h2 class="card-title">Your Information</h2>
-          <div class="info-grid">
-            <div class="info-item">
-              <div class="info-label">Full Name</div>
-              <div class="info-value">${application.firstName} ${application.middleName ? application.middleName + ' ' : ''}${application.lastName}</div>
-            </div>
-            <div class="info-item">
-              <div class="info-label">Email</div>
-              <div class="info-value">${application.email}</div>
-            </div>
-            <div class="info-item">
-              <div class="info-label">Phone</div>
-              <div class="info-value">${application.phoneNumber}</div>
-            </div>
-            <div class="info-item">
-              <div class="info-label">Experience</div>
-              <div class="info-value">${application.experience}${application.yearsOfExperience ? ` (${application.yearsOfExperience} years)` : ''}</div>
-            </div>
-          </div>
-        </div>
-
-        <div class="card">
-          <h2 class="card-title">Next Steps</h2>
-          <p style="margin: 0 0 16px;">We have received your application and will review it shortly. Our hiring team will carefully evaluate your qualifications and experience.</p>
-          <p style="margin: 0 0 16px;">If your profile matches our requirements, we will contact you for the next steps in the hiring process. This typically includes:</p>
-          <ul style="margin: 0 0 16px; padding-left: 20px;">
-            <li>Initial screening interview</li>
-            <li>Technical assessment (if applicable)</li>
-            <li>Team interview</li>
-            <li>Final interview with hiring manager</li>
-          </ul>
-          <a href="https://your-careers-page.com" class="button">View Job Status</a>
-        </div>
-
-        <div class="divider"></div>
-
-        <div class="footer">
-          <p style="margin: 0 0 8px;">This is an automated message. Please do not reply to this email.</p>
-          <p style="margin: 0;">© ${new Date().getFullYear()} ${job.company}. All rights reserved.</p>
+        
+        <div class="footer" style="text-align: center; padding: 20px; border-top: 1px solid #e0e0e0; background-color: #f8f9fa;">
+          <p style="margin: 0 0 8px; color: #666; font-size: 14px;">This is an automated message. Please do not reply to this email.</p>
+          <p style="margin: 0; color: #666; font-size: 14px;">© ${new Date().getFullYear()} Jobby. All rights reserved.</p>
         </div>
       </div>
     </body>
@@ -164,64 +102,13 @@ export async function sendJobApplicationEmail(application: IApplication, job: IJ
   return sendEmail({
     to: application.email,
     subject,
-    html,
+    html
   });
 }
 
 export async function sendApplicationStatusUpdateEmail(application: IApplication, job: IJob, status: string) {
-  const subject = `Application Status Update: ${job.title} at ${job.company}`;
+  const subject = `Application Update: ${job.title} at ${job.company}`;
   
-  const statusConfig = {
-    'accepted': {
-      color: '#059669',
-      bgColor: '#d1fae5',
-      title: 'Congratulations!',
-      message: 'We are pleased to inform you that your application has been accepted. Our team will contact you shortly with the next steps in the onboarding process.',
-      nextSteps: [
-        'Complete the onboarding documentation',
-        'Schedule your first day',
-        'Meet with your team lead',
-        'Set up your work environment'
-      ]
-    },
-    'rejected': {
-      color: '#dc2626',
-      bgColor: '#fee2e2',
-      title: 'Application Update',
-      message: 'Thank you for your interest in the position. After careful consideration, we have decided to move forward with other candidates whose qualifications more closely match our current needs.',
-      nextSteps: [
-        'Keep an eye on our careers page for new opportunities',
-        'Update your profile to match your latest skills',
-        'Consider applying for other positions that match your qualifications'
-      ]
-    },
-    'interview': {
-      color: '#2563eb',
-      bgColor: '#dbeafe',
-      title: 'Interview Invitation',
-      message: 'We are impressed with your application and would like to invite you for an interview. Our team will contact you shortly to schedule a convenient time.',
-      nextSteps: [
-        'Prepare for the interview',
-        'Review the job description',
-        'Research our company',
-        'Prepare questions for the interviewers'
-      ]
-    },
-    'pending': {
-      color: '#6b7280',
-      bgColor: '#f3f4f6',
-      title: 'Application Status Update',
-      message: 'Your application is currently under review. We will notify you as soon as there are any updates.',
-      nextSteps: [
-        'Keep your contact information up to date',
-        'Check your email regularly for updates',
-        'Feel free to apply for other positions that interest you'
-      ]
-    }
-  };
-
-  const config = statusConfig[status as keyof typeof statusConfig] || statusConfig.pending;
-
   const html = `
     <!DOCTYPE html>
     <html>
@@ -229,101 +116,46 @@ export async function sendApplicationStatusUpdateEmail(application: IApplication
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
       <title>Application Status Update</title>
-      <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #1f2937; margin: 0; padding: 0; }
-        .container { max-width: 600px; margin: 0 auto; padding: 40px 20px; }
-        .header { text-align: center; margin-bottom: 40px; }
-        .logo { max-width: 150px; margin-bottom: 20px; }
-        .title { color: ${config.color}; font-size: 24px; font-weight: 600; margin: 0 0 10px; }
-        .subtitle { color: #6b7280; font-size: 16px; margin: 0; }
-        .card { background-color: #ffffff; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); padding: 24px; margin-bottom: 24px; }
-        .card-title { color: ${config.color}; font-size: 18px; font-weight: 600; margin: 0 0 16px; }
-        .status-badge { display: inline-block; background-color: ${config.bgColor}; color: ${config.color}; padding: 4px 12px; border-radius: 9999px; font-size: 14px; font-weight: 500; text-transform: uppercase; }
-        .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-        .info-item { margin-bottom: 12px; }
-        .info-label { color: #6b7280; font-size: 14px; margin-bottom: 4px; }
-        .info-value { color: #1f2937; font-size: 15px; font-weight: 500; }
-        .divider { border-top: 1px solid #e5e7eb; margin: 32px 0; }
-        .footer { text-align: center; color: #6b7280; font-size: 13px; }
-        .button { display: inline-block; background-color: ${config.color}; color: #ffffff; text-decoration: none; padding: 12px 24px; border-radius: 6px; font-weight: 500; margin-top: 16px; }
-        .next-steps { background-color: ${config.bgColor}; border-radius: 8px; padding: 16px; margin-top: 16px; }
-        .next-steps-title { color: ${config.color}; font-size: 16px; font-weight: 600; margin: 0 0 12px; }
-        .next-steps-list { margin: 0; padding-left: 20px; }
-        .next-steps-list li { margin-bottom: 8px; }
-        @media (max-width: 600px) {
-          .info-grid { grid-template-columns: 1fr; }
-          .container { padding: 20px; }
-        }
-      </style>
     </head>
-    <body>
-      <div class="container">
-        <div class="header">
-          <img src="https://your-logo-url.com/logo.png" alt="Company Logo" class="logo">
-          <h1 class="title">${config.title}</h1>
-          <p class="subtitle">Application Status Update for ${job.title}</p>
+    <body style="margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f4f4f4;">
+      <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; padding: 20px;">
+        <div class="header" style="text-align: center; padding: 20px 0; border-bottom: 1px solid #e0e0e0;">
+          <h1 style="color: #1976d2; margin: 0;">Jobby</h1>
         </div>
-
-        <div class="card">
-          <h2 class="card-title">Status Update</h2>
-          <div style="margin-bottom: 16px;">
-            <span class="status-badge">${status}</span>
-          </div>
-          <p style="margin: 0 0 16px;">${config.message}</p>
+        
+        <div class="content" style="padding: 30px 20px;">
+          <h2 style="color: #333; margin-bottom: 20px;">Application Status Update</h2>
           
-          <div class="next-steps">
-            <h3 class="next-steps-title">Next Steps</h3>
-            <ul class="next-steps-list">
-              ${config.nextSteps.map(step => `<li>${step}</li>`).join('')}
-            </ul>
+          <p style="color: #666; line-height: 1.6; margin-bottom: 20px;">
+            Hello ${application.name},
+          </p>
+          
+          <p style="color: #666; line-height: 1.6; margin-bottom: 20px;">
+            We have an update regarding your application for the position of <strong>${job.title}</strong> at <strong>${job.company}</strong>.
+          </p>
+          
+          <div style="background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;">
+            <h3 style="margin: 0 0 15px; color: #333;">Status Update</h3>
+            <p style="margin: 0 0 8px; color: #666;"><strong>Position:</strong> ${job.title}</p>
+            <p style="margin: 0 0 8px; color: #666;"><strong>Company:</strong> ${job.company}</p>
+            <p style="margin: 0 0 8px; color: #666;"><strong>New Status:</strong> <span style="color: #1976d2; font-weight: bold;">${status}</span></p>
+            <p style="margin: 0 0 8px; color: #666;"><strong>Update Date:</strong> ${new Date().toLocaleDateString()}</p>
           </div>
+          
+          <p style="color: #666; line-height: 1.6; margin-bottom: 20px;">
+            ${status === 'Approved' ? 'Congratulations! Your application has been approved and you will be contacted for the next steps.' : 
+              status === 'Rejected' ? 'We regret to inform you that your application was not selected for this position. We encourage you to apply for other opportunities.' :
+              'We are currently reviewing your application and will provide updates as they become available.'}
+          </p>
+          
+          <p style="color: #666; line-height: 1.6; margin-bottom: 0;">
+            Thank you for your interest in joining our team!
+          </p>
         </div>
-
-        <div class="card">
-          <h2 class="card-title">Application Details</h2>
-          <div class="info-grid">
-            <div class="info-item">
-              <div class="info-label">Position</div>
-              <div class="info-value">${job.title}</div>
-            </div>
-            <div class="info-item">
-              <div class="info-label">Company</div>
-              <div class="info-value">${job.company}</div>
-            </div>
-            <div class="info-item">
-              <div class="info-label">Location</div>
-              <div class="info-value">${job.location}</div>
-            </div>
-            <div class="info-item">
-              <div class="info-label">Employment Type</div>
-              <div class="info-value">${job.employmentType}</div>
-            </div>
-          </div>
-        </div>
-
-        <div class="card">
-          <h2 class="card-title">Your Information</h2>
-          <div class="info-grid">
-            <div class="info-item">
-              <div class="info-label">Full Name</div>
-              <div class="info-value">${application.firstName} ${application.middleName ? application.middleName + ' ' : ''}${application.lastName}</div>
-            </div>
-            <div class="info-item">
-              <div class="info-label">Email</div>
-              <div class="info-value">${application.email}</div>
-            </div>
-            <div class="info-item">
-              <div class="info-label">Phone</div>
-              <div class="info-value">${application.phoneNumber}</div>
-            </div>
-          </div>
-        </div>
-
-        <div class="divider"></div>
-
-        <div class="footer">
-          <p style="margin: 0 0 8px;">This is an automated message. Please do not reply to this email.</p>
-          <p style="margin: 0;">© ${new Date().getFullYear()} ${job.company}. All rights reserved.</p>
+        
+        <div class="footer" style="text-align: center; padding: 20px; border-top: 1px solid #e0e0e0; background-color: #f8f9fa;">
+          <p style="margin: 0 0 8px; color: #666; font-size: 14px;">This is an automated message. Please do not reply to this email.</p>
+          <p style="margin: 0; color: #666; font-size: 14px;">© ${new Date().getFullYear()} Jobby. All rights reserved.</p>
         </div>
       </div>
     </body>
@@ -338,69 +170,49 @@ export async function sendApplicationStatusUpdateEmail(application: IApplication
 }
 
 export async function sendOTPEmail(email: string, otp: string, type: 'signup' | 'forgot-password') {
-  const subject = type === 'signup' 
-    ? 'Verify Your Email Address' 
-    : 'Reset Your Password';
-
+  const subject = type === 'signup' ? 'Verify Your Email - Jobby' : 'Password Reset Code - Jobby';
+  
   const html = `
     <!DOCTYPE html>
     <html>
     <head>
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <title>${subject}</title>
-      <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #1f2937; margin: 0; padding: 0; }
-        .container { max-width: 600px; margin: 0 auto; padding: 40px 20px; }
-        .header { text-align: center; margin-bottom: 40px; }
-        .logo { max-width: 150px; margin-bottom: 20px; }
-        .title { color: #2563eb; font-size: 24px; font-weight: 600; margin: 0 0 10px; }
-        .subtitle { color: #6b7280; font-size: 16px; margin: 0; }
-        .card { background-color: #ffffff; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); padding: 24px; margin-bottom: 24px; }
-        .otp-container { text-align: center; margin: 32px 0; }
-        .otp-code { font-size: 32px; font-weight: 600; letter-spacing: 8px; color: #2563eb; background-color: #f3f4f6; padding: 16px 24px; border-radius: 8px; display: inline-block; }
-        .divider { border-top: 1px solid #e5e7eb; margin: 32px 0; }
-        .footer { text-align: center; color: #6b7280; font-size: 13px; }
-        .warning { color: #dc2626; font-size: 14px; margin-top: 16px; }
-        @media (max-width: 600px) {
-          .container { padding: 20px; }
-        }
-      </style>
+      <title>${type === 'signup' ? 'Email Verification' : 'Password Reset'}</title>
     </head>
-    <body>
-      <div class="container">
-        <div class="header">
-          <img src="https://your-logo-url.com/logo.png" alt="Company Logo" class="logo">
-          <h1 class="title">${subject}</h1>
-          <p class="subtitle">${type === 'signup' ? 'Complete your registration' : 'Reset your account password'}</p>
+    <body style="margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f4f4f4;">
+      <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; padding: 20px;">
+        <div class="header" style="text-align: center; padding: 20px 0; border-bottom: 1px solid #e0e0e0;">
+          <h1 style="color: #1976d2; margin: 0;">Jobby</h1>
         </div>
-
-        <div class="card">
-          <p style="margin: 0 0 16px;">
-            ${type === 'signup' 
-              ? 'Thank you for signing up! To complete your registration, please use the following verification code:'
-              : 'We received a request to reset your password. Use the following code to verify your identity:'}
+        
+        <div class="content" style="padding: 30px 20px;">
+          <h2 style="color: #333; margin-bottom: 20px;">${type === 'signup' ? 'Verify Your Email Address' : 'Reset Your Password'}</h2>
+          
+          <p style="color: #666; line-height: 1.6; margin-bottom: 20px;">
+            ${type === 'signup' ? 'Thank you for signing up! Please verify your email address to complete your registration.' : 'You requested to reset your password. Use the code below to reset your password.'}
           </p>
           
-          <div class="otp-container">
-            <div class="otp-code">${otp}</div>
+          <div style="background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0; text-align: center;">
+            <p style="margin: 0 0 10px; color: #333; font-weight: bold;">Your Verification Code:</p>
+            <p style="margin: 0; font-size: 32px; font-weight: bold; color: #1976d2; letter-spacing: 8px; font-family: monospace;">${otp}</p>
           </div>
-
-          <p style="margin: 0 0 16px;">
-            This code will expire in 10 minutes. If you didn't request this ${type === 'signup' ? 'verification' : 'password reset'}, 
-            please ignore this email.
+          
+          <p style="color: #666; line-height: 1.6; margin-bottom: 20px;">
+            This code will expire in 10 minutes. If you didn't request this ${type === 'signup' ? 'verification' : 'password reset'}, please ignore this email.
           </p>
-
-          <p class="warning">
-            For security reasons, never share this code with anyone.
-          </p>
+          
+          <div style="text-align: center; margin: 30px 0;">
+            <a href="${process.env.NEXT_PUBLIC_APP_URL || process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/verify?email=${encodeURIComponent(email)}&type=${type}" 
+               style="background-color: #1976d2; color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; display: inline-block; font-weight: bold;">
+              ${type === 'signup' ? 'Verify Email' : 'Reset Password'}
+            </a>
+          </div>
         </div>
-
-        <div class="divider"></div>
-
-        <div class="footer">
-          <p style="margin: 0 0 8px;">This is an automated message. Please do not reply to this email.</p>
-          <p style="margin: 0;">© ${new Date().getFullYear()} Jobby. All rights reserved.</p>
+        
+        <div class="footer" style="text-align: center; padding: 20px; border-top: 1px solid #e0e0e0; background-color: #f8f9fa;">
+          <p style="margin: 0 0 8px; color: #666; font-size: 14px;">This is an automated message. Please do not reply to this email.</p>
+          <p style="margin: 0; color: #666; font-size: 14px;">© ${new Date().getFullYear()} Jobby. All rights reserved.</p>
         </div>
       </div>
     </body>
@@ -419,4 +231,79 @@ export default {
   sendJobApplicationEmail,
   sendApplicationStatusUpdateEmail,
   sendOTPEmail,
-}; 
+  sendPasswordResetEmail,
+};
+export async function sendPasswordResetEmail(email: string, resetToken: string, name: string) {
+  const subject = 'Password Reset - Greenotech Jobs';
+  const resetUrl = `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/reset-password?token=${resetToken}`;
+  
+  const html = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Password Reset - Greenotech Jobs</title>
+    </head>
+    <body style="margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f4f4f4;">
+      <div style="max-width: 600px; margin: 0 auto; background-color: white; box-shadow: 0 0 10px rgba(0,0,0,0.1);">
+        <div class="header" style="background-color: #1976d2; color: white; padding: 30px; text-align: center;">
+          <h1 style="margin: 0; font-size: 28px;">Greenotech Jobs</h1>
+          <p style="margin: 10px 0 0; font-size: 16px; opacity: 0.9;">Password Reset Request</p>
+        </div>
+        
+        <div class="content" style="padding: 40px 30px;">
+          <h2 style="color: #333; margin-bottom: 20px;">Hello ${name},</h2>
+          
+          <p style="color: #666; line-height: 1.6; margin-bottom: 20px;">
+            We received a request to reset your password for your Greenotech Jobs account.
+          </p>
+          
+          <p style="color: #666; line-height: 1.6; margin-bottom: 20px;">
+            Click the button below to reset your password. This link will expire in 24 hours for security reasons.
+          </p>
+          
+          <div style="text-align: center; margin: 30px 0;">
+            <a href="${resetUrl}" 
+               style="background-color: #1976d2; color: white; padding: 15px 40px; text-decoration: none; border-radius: 6px; display: inline-block; font-weight: bold; font-size: 16px;">
+              Reset My Password
+            </a>
+          </div>
+          
+          <p style="color: #666; line-height: 1.6; margin-bottom: 20px;">
+            If the button doesn't work, you can copy and paste this link into your browser:
+          </p>
+          
+          <div style="background-color: #f8f9fa; padding: 15px; border-radius: 6px; margin: 20px 0; word-break: break-all;">
+            <p style="margin: 0; color: #1976d2; font-size: 14px;">${resetUrl}</p>
+          </div>
+          
+          <p style="color: #666; line-height: 1.6; margin-bottom: 20px;">
+            <strong>Security Notes:</strong>
+          </p>
+          <ul style="color: #666; line-height: 1.6; margin-bottom: 20px;">
+            <li>This link will expire in 24 hours</li>
+            <li>If you didn't request this password reset, please ignore this email</li>
+            <li>For your security, never share this link with anyone</li>
+          </ul>
+          
+          <p style="color: #666; line-height: 1.6; margin-bottom: 0;">
+            If you have any questions, please contact our support team.
+          </p>
+        </div>
+        
+        <div class="footer" style="text-align: center; padding: 20px; border-top: 1px solid #e0e0e0; background-color: #f8f9fa;">
+          <p style="margin: 0 0 8px; color: #666; font-size: 14px;">This is an automated message. Please do not reply to this email.</p>
+          <p style="margin: 0; color: #666; font-size: 14px;">© ${new Date().getFullYear()} Greenotech Jobs. All rights reserved.</p>
+        </div>
+      </div>
+    </body>
+    </html>
+  `;
+
+  return sendEmail({
+    to: email,
+    subject,
+    html
+  });
+}

@@ -25,6 +25,7 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import { Menu, X, User, LogOut, Settings, BriefcaseIcon } from "lucide-react"
 import { cn, getLogoUrl, getLogoDimensions } from "@/lib/utils"
 import { useAuth } from "@/contexts/auth-context"
+import { useSettings } from "@/contexts/settings-context"
 
 export function Navbar() {
   const [isOpen, setIsOpen] = useState(false)
@@ -32,7 +33,8 @@ export function Navbar() {
   const [profilePicture, setProfilePicture] = useState<string | null>(null)
   const [lastUpdate, setLastUpdate] = useState(Date.now())
   const pathname = usePathname()
-  const { isAuthenticated, isEmployer, user, logout } = useAuth()
+  const { isAuthenticated, isEmployer, isAdmin, user, logout } = useAuth()
+  const { settings } = useSettings()
 
   const { width, height } = getLogoDimensions('navbar')
 
@@ -113,7 +115,7 @@ export function Navbar() {
     setIsOpen(false)
   }
 
-  const navItems = isEmployer ? [
+  const navItems = isAdmin ? [] : isEmployer ? [
     { name: "Home", href: "/employer" },
     { name: "Jobs", href: "/jobs" },
     { name: "Companies", href: "/companies" },
@@ -138,34 +140,36 @@ export function Navbar() {
         <div className="flex items-center">
           <Link href="/" className="flex items-center space-x-2">
             <BriefcaseIcon className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
-            <span className="text-lg sm:text-xl font-bold">GreenoTechJobs</span>
+            <span className="text-lg sm:text-xl font-bold">{settings?.siteName || "GreenTech Jobs"}</span>
           </Link>
         </div>
 
         {/* Desktop Navigation */}
-        <div className="hidden lg:flex lg:items-center lg:space-x-4">
-          <NavigationMenu>
-            <NavigationMenuList>
-              {navItems.map((item) => (
-                <NavigationMenuItem key={item.name}>
-                  <Link href={item.href} legacyBehavior passHref>
-                    <NavigationMenuLink
-                      className={cn(
-                        navigationMenuTriggerStyle(),
-                        "px-4 py-2",
-                        pathname === item.href
-                          ? "bg-primary/10 text-primary"
-                          : "text-foreground/70 hover:text-foreground",
-                      )}
-                    >
-                      {item.name}
-                    </NavigationMenuLink>
-                  </Link>
-                </NavigationMenuItem>
-              ))}
-            </NavigationMenuList>
-          </NavigationMenu>
-        </div>
+        {!isAdmin && (
+          <div className="hidden lg:flex lg:items-center lg:space-x-4">
+            <NavigationMenu>
+              <NavigationMenuList>
+                {navItems.map((item) => (
+                  <NavigationMenuItem key={item.name}>
+                    <Link href={item.href} legacyBehavior passHref>
+                      <NavigationMenuLink
+                        className={cn(
+                          navigationMenuTriggerStyle(),
+                          "px-4 py-2",
+                          pathname === item.href
+                            ? "bg-primary/10 text-primary"
+                            : "text-foreground/70 hover:text-foreground",
+                        )}
+                      >
+                        {item.name}
+                      </NavigationMenuLink>
+                    </Link>
+                  </NavigationMenuItem>
+                ))}
+              </NavigationMenuList>
+            </NavigationMenu>
+          </div>
+        )}
 
         <div className="flex items-center space-x-2 sm:space-x-4">
           <ModeToggle />
@@ -191,22 +195,26 @@ export function Navbar() {
                   </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                {isEmployer ? (
-                  <DropdownMenuItem asChild>
-                    <Link href="/employer">
-                      <User className="mr-2 h-4 w-4" />
-                      <span>Employer Profile</span>
-                    </Link>
-                  </DropdownMenuItem>
-                ) : (
-                  <DropdownMenuItem asChild>
-                    <Link href="/profile">
-                      <User className="mr-2 h-4 w-4" />
-                      <span>Profile</span>
-                    </Link>
-                  </DropdownMenuItem>
+                {!isAdmin && (
+                  <>
+                    {isEmployer ? (
+                      <DropdownMenuItem asChild>
+                        <Link href="/employer">
+                          <User className="mr-2 h-4 w-4" />
+                          <span>Employer Profile</span>
+                        </Link>
+                      </DropdownMenuItem>
+                    ) : (
+                      <DropdownMenuItem asChild>
+                        <Link href="/profile">
+                          <User className="mr-2 h-4 w-4" />
+                          <span>Profile</span>
+                        </Link>
+                      </DropdownMenuItem>
+                    )}
+                    <DropdownMenuSeparator />
+                  </>
                 )}
-                <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={logout}>
                   <LogOut className="mr-2 h-4 w-4" />
                   <span>Log out</span>
@@ -233,7 +241,7 @@ export function Navbar() {
             </SheetTrigger>
             <SheetContent side="right" className="w-[280px] sm:w-[320px] p-4">
               <nav className="flex flex-col gap-4 mt-4">
-                {navItems.map((item) => (
+                {!isAdmin && navItems.map((item) => (
                   <Link
                     key={item.name}
                     href={item.href}

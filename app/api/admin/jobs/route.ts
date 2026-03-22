@@ -1,7 +1,27 @@
 import { NextResponse } from "next/server"
-import { connectToDatabase } from "@/lib/mongodb"
+import dbConnect from "@/lib/db"
 import Job from "@/models/Job"
 import { Types } from "mongoose"
+
+interface JobDocument {
+  _id: Types.ObjectId
+  title: string
+  company: {
+    _id: Types.ObjectId
+    name: string
+  }
+  location: string
+  type: string
+  salary: {
+    min: number
+    max: number
+    currency: string
+  }
+  isActive: boolean
+  applications: number
+  createdAt: Date
+  updatedAt: Date
+}
 
 interface JobResponse {
   _id: string
@@ -18,7 +38,6 @@ interface JobResponse {
     currency: string
   }
   isActive: boolean
-  views: number
   applications: number
   createdAt: string
   updatedAt: string
@@ -27,24 +46,23 @@ interface JobResponse {
 // GET /api/admin/jobs - Get all jobs with pagination and filtering
 export async function GET(request: Request) {
   try {
-    await connectToDatabase()
+    await dbConnect()
 
     const { searchParams } = new URL(request.url)
     const page = parseInt(searchParams.get("page") || "1")
     const limit = parseInt(searchParams.get("limit") || "10")
-    const type = searchParams.get("type")
-    const isActive = searchParams.get("isActive")
+    const status = searchParams.get("status")
     const search = searchParams.get("search")
 
     // Build query
     const query: any = {}
-    if (type) query.type = type
-    if (isActive !== null) query.isActive = isActive === "true"
+    if (status === "active") query.isActive = true
+    if (status === "inactive") query.isActive = false
     if (search) {
       query.$or = [
         { title: { $regex: search, $options: "i" } },
-        { description: { $regex: search, $options: "i" } },
         { "company.name": { $regex: search, $options: "i" } },
+        { location: { $regex: search, $options: "i" } },
       ]
     }
 
@@ -58,34 +76,21 @@ export async function GET(request: Request) {
       .limit(limit)
       .populate("company", "name")
       .lean()
-      .then(async (jobs) => {
-        const jobsWithApplications = await Promise.all(
-          jobs.map(async (job) => {
-            const applications = await Job.aggregate([
-              { $match: { _id: job._id } },
-              { $project: { count: { $size: "$applications" } } },
-            ]).then((result) => result[0]?.count || 0)
-
-            return {
-              _id: job._id.toString(),
-              title: job.title,
-              company: {
-                _id: job.company._id.toString(),
-                name: job.company.name,
-              },
-              location: job.location,
-              type: job.type,
-              salary: job.salary,
-              isActive: job.isActive,
-              views: job.views || 0,
-              applications,
-              createdAt: job.createdAt.toISOString(),
-              updatedAt: job.updatedAt.toISOString(),
-            } as JobResponse
-          })
-        )
-        return jobsWithApplications
-      })
+      .then(jobs => jobs.map((job: any) => ({
+        _id: job._id.toString(),
+        title: job.title,
+        company: {
+          _id: job.company?._id?.toString() || "unknown",
+          name: job.company?.name || "Unknown Company",
+        },
+        location: job.location,
+        type: job.type,
+        salary: job.salary,
+        isActive: job.isActive,
+        applications: job.applications?.length || 0,
+        createdAt: job.createdAt.toISOString(),
+        updatedAt: job.updatedAt.toISOString(),
+      })))
 
     return NextResponse.json({
       jobs,
@@ -111,7 +116,7 @@ export async function PATCH(
   { params }: { params: { id: string } }
 ) {
   try {
-    await connectToDatabase()
+    await dbConnect()
 
     const { id } = params
     const body = await request.json()
@@ -177,7 +182,7 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
-    await connectToDatabase()
+    await dbConnect()
 
     const { id } = params
 

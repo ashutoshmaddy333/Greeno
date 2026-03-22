@@ -1,31 +1,63 @@
 import { NextResponse } from "next/server"
-import { connectToDatabase } from "@/lib/mongodb"
+import dbConnect from "@/lib/db"
 import Job from "@/models/Job"
 import { Types } from "mongoose"
-import { IJob } from "@/models/Job"
 
-interface JobDocument {
-  _id: Types.ObjectId
-  title: string
-  company: {
-    _id: Types.ObjectId
-    name: string
+// GET /api/admin/jobs/:id - Get job by ID
+export async function GET(
+  request: Request,
+  { params }: { params: { id: string } }
+) {
+  try {
+    await dbConnect()
+
+    const { id } = params
+
+    // Validate job ID
+    if (!Types.ObjectId.isValid(id)) {
+      return NextResponse.json(
+        { error: "Invalid job ID" },
+        { status: 400 }
+      )
+    }
+
+    // Find job
+    const job = await Job.findById(id)
+      .populate("company", "name")
+      .lean()
+
+    if (!job) {
+      return NextResponse.json(
+        { error: "Job not found" },
+        { status: 404 }
+      )
+    }
+
+    return NextResponse.json({
+      _id: job._id.toString(),
+      title: job.title,
+      company: {
+        _id: job.company?._id?.toString() || "unknown",
+        name: job.company?.name || "Unknown Company",
+      },
+      location: job.location,
+      type: job.type,
+      salary: job.salary,
+      description: job.description,
+      requirements: job.requirements,
+      benefits: job.benefits,
+      isActive: job.isActive,
+      applications: job.applications?.length || 0,
+      createdAt: job.createdAt.toISOString(),
+      updatedAt: job.updatedAt.toISOString(),
+    })
+  } catch (error) {
+    console.error("Error fetching job:", error)
+    return NextResponse.json(
+      { error: "Failed to fetch job" },
+      { status: 500 }
+    )
   }
-  location: string
-  type: string
-  description: string
-  requirements: string[]
-  responsibilities: string[]
-  salary: {
-    min: number
-    max: number
-    currency: string
-  }
-  isActive: boolean
-  views: number
-  applications: Types.ObjectId[]
-  createdAt: Date
-  updatedAt: Date
 }
 
 // PATCH /api/admin/jobs/:id - Update job
@@ -34,7 +66,7 @@ export async function PATCH(
   { params }: { params: { id: string } }
 ) {
   try {
-    await connectToDatabase()
+    await dbConnect()
 
     const { id } = params
     const body = await request.json()
@@ -54,7 +86,7 @@ export async function PATCH(
       { new: true, runValidators: true }
     )
       .populate("company", "name")
-      .lean() as unknown as JobDocument
+      .lean()
 
     if (!job) {
       return NextResponse.json(
@@ -63,25 +95,21 @@ export async function PATCH(
       )
     }
 
-    // Get application count
-    const applications = await Job.aggregate([
-      { $match: { _id: job._id } },
-      { $project: { count: { $size: "$applications" } } },
-    ]).then((result) => result[0]?.count || 0)
-
     return NextResponse.json({
       _id: job._id.toString(),
       title: job.title,
       company: {
-        _id: job.company._id.toString(),
-        name: job.company.name,
+        _id: job.company?._id?.toString() || "unknown",
+        name: job.company?.name || "Unknown Company",
       },
       location: job.location,
       type: job.type,
       salary: job.salary,
+      description: job.description,
+      requirements: job.requirements,
+      benefits: job.benefits,
       isActive: job.isActive,
-      views: job.views || 0,
-      applications,
+      applications: job.applications?.length || 0,
       createdAt: job.createdAt.toISOString(),
       updatedAt: job.updatedAt.toISOString(),
     })
@@ -100,7 +128,7 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
-    await connectToDatabase()
+    await dbConnect()
 
     const { id } = params
 

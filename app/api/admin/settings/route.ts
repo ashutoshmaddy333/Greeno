@@ -1,15 +1,7 @@
 import { NextResponse } from "next/server"
-import { connectToDatabase } from "@/lib/mongodb"
-import { Types, Collection } from "mongoose"
-
-// Define the settings schema
-interface Settings {
-  _id: Types.ObjectId
-  key: string
-  value: string | boolean | number
-  description: string
-  updatedAt: Date
-}
+import dbConnect from "@/lib/db"
+import { SystemSettings } from "@/models/SystemSettings"
+import { Types } from "mongoose"
 
 // Default settings
 const DEFAULT_SETTINGS = [
@@ -17,64 +9,104 @@ const DEFAULT_SETTINGS = [
     key: "allowJobPosting",
     value: true,
     description: "Allow employers to post new jobs",
+    category: "job" as const,
+    type: "boolean" as const,
+    isPublic: true,
   },
   {
     key: "allowJobApplications",
     value: true,
     description: "Allow job seekers to apply for jobs",
+    category: "job" as const,
+    type: "boolean" as const,
+    isPublic: true,
   },
   {
     key: "requireEmailVerification",
     value: true,
     description: "Require email verification for new accounts",
+    category: "security" as const,
+    type: "boolean" as const,
+    isPublic: true,
   },
   {
     key: "maxJobsPerEmployer",
     value: 10,
     description: "Maximum number of active jobs per employer",
+    category: "job" as const,
+    type: "number" as const,
+    isPublic: true,
   },
   {
     key: "maxApplicationsPerJob",
     value: 100,
     description: "Maximum number of applications per job",
+    category: "job" as const,
+    type: "number" as const,
+    isPublic: true,
   },
   {
     key: "jobPostingFee",
     value: 0,
     description: "Fee for posting a job (in USD)",
+    category: "job" as const,
+    type: "number" as const,
+    isPublic: true,
   },
   {
     key: "maintenanceMode",
     value: false,
     description: "Enable maintenance mode",
+    category: "general" as const,
+    type: "boolean" as const,
+    isPublic: true,
   },
   {
     key: "maintenanceMessage",
     value: "The site is currently under maintenance. Please check back later.",
     description: "Message to display during maintenance mode",
+    category: "general" as const,
+    type: "string" as const,
+    isPublic: true,
+  },
+  {
+    key: "siteName",
+    value: "GreenTech Jobs",
+    description: "Name of the job board",
+    category: "general" as const,
+    type: "string" as const,
+    isPublic: true,
+  },
+  {
+    key: "contactEmail",
+    value: "hrm@greenotechjobs.com",
+    description: "Contact email for support",
+    category: "general" as const,
+    type: "string" as const,
+    isPublic: true,
   },
 ]
 
 // GET /api/admin/settings - Get all settings
 export async function GET() {
   try {
-    await connectToDatabase()
-    const db = (global as any).mongoose.connection.db
-    const settingsCollection = db.collection("settings") as Collection<Settings>
-
-    // Check if settings exist
-    const existingSettings = await settingsCollection.find().toArray()
-
-    // If no settings exist, initialize with defaults
+    await dbConnect()
+    
+    // Check if settings exist in database
+    const existingSettings = await SystemSettings.find({})
+    
     if (existingSettings.length === 0) {
-      const settingsToInsert = DEFAULT_SETTINGS.map(setting => ({
+      // Initialize with default settings
+      const defaultSettingsWithIds = DEFAULT_SETTINGS.map(setting => ({
         ...setting,
         _id: new Types.ObjectId(),
+        updatedBy: new Types.ObjectId(), // You might want to get this from the admin session
+        createdAt: new Date(),
         updatedAt: new Date(),
       }))
-
-      await settingsCollection.insertMany(settingsToInsert)
-      return NextResponse.json({ settings: settingsToInsert })
+      
+      await SystemSettings.insertMany(defaultSettingsWithIds)
+      return NextResponse.json({ settings: defaultSettingsWithIds })
     }
 
     return NextResponse.json({ settings: existingSettings })
@@ -90,9 +122,7 @@ export async function GET() {
 // PATCH /api/admin/settings - Update settings
 export async function PATCH(request: Request) {
   try {
-    await connectToDatabase()
-    const db = (global as any).mongoose.connection.db
-    const settingsCollection = db.collection("settings") as Collection<Settings>
+    await dbConnect()
     const updates = await request.json()
 
     if (!Array.isArray(updates)) {
@@ -102,29 +132,30 @@ export async function PATCH(request: Request) {
       )
     }
 
-    const bulkOps = updates.map(update => ({
-      updateOne: {
-        filter: { key: update.key },
-        update: {
-          $set: {
-            value: update.value,
-            updatedAt: new Date(),
-          },
+    const updatedSettings = []
+    
+    for (const update of updates) {
+      const { key, value } = update
+      
+      const result = await SystemSettings.findOneAndUpdate(
+        { key },
+        { 
+          value,
+          updatedAt: new Date(),
+          updatedBy: new Types.ObjectId(), // You might want to get this from the admin session
         },
-      },
-    }))
-
-    const result = await settingsCollection.bulkWrite(bulkOps)
-
-    if (result.modifiedCount === 0) {
-      return NextResponse.json(
-        { error: "No settings were updated" },
-        { status: 400 }
+        { new: true }
       )
+      
+      if (result) {
+        updatedSettings.push(result)
+      }
     }
 
-    const updatedSettings = await settingsCollection.find().toArray()
-    return NextResponse.json({ settings: updatedSettings })
+    return NextResponse.json({ 
+      message: "Settings updated successfully",
+      updatedSettings 
+    })
   } catch (error) {
     console.error("Error in PATCH /api/admin/settings:", error)
     return NextResponse.json(
@@ -137,22 +168,26 @@ export async function PATCH(request: Request) {
 // POST /api/admin/settings/reset - Reset settings to defaults
 export async function POST(request: Request) {
   try {
-    await connectToDatabase()
-    const db = (global as any).mongoose.connection.db
-    const settingsCollection = db.collection("settings") as Collection<Settings>
-
+    await dbConnect()
+    
     // Delete all existing settings
-    await settingsCollection.deleteMany({})
-
+    await SystemSettings.deleteMany({})
+    
     // Insert default settings
-    const settingsToInsert = DEFAULT_SETTINGS.map(setting => ({
+    const defaultSettingsWithIds = DEFAULT_SETTINGS.map(setting => ({
       ...setting,
       _id: new Types.ObjectId(),
+      updatedBy: new Types.ObjectId(), // You might want to get this from the admin session
+      createdAt: new Date(),
       updatedAt: new Date(),
     }))
+    
+    await SystemSettings.insertMany(defaultSettingsWithIds)
 
-    await settingsCollection.insertMany(settingsToInsert)
-    return NextResponse.json({ settings: settingsToInsert })
+    return NextResponse.json({ 
+      message: "Settings reset successfully",
+      settings: defaultSettingsWithIds 
+    })
   } catch (error) {
     console.error("Error in POST /api/admin/settings:", error)
     return NextResponse.json(

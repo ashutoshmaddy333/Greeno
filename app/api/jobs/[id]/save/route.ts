@@ -30,12 +30,16 @@ export async function POST(
     }
 
     // Check if job is already saved
-    if (profile.savedJobs.includes(jobId)) {
+    const isAlreadySaved = profile.savedJobs.some((id: mongoose.Types.ObjectId) => id.toString() === jobId)
+    
+    if (isAlreadySaved) {
       // If already saved, unsave it
       profile.savedJobs = profile.savedJobs.filter((id: mongoose.Types.ObjectId) => id.toString() !== jobId)
+      console.log("Job unsaved:", jobId)
     } else {
       // If not saved, add it
       profile.savedJobs.push(jobId)
+      console.log("Job saved:", jobId)
     }
 
     await profile.save()
@@ -49,6 +53,23 @@ export async function POST(
           select: "name logo website industry size",
         },
       })
+      .populate({
+        path: "appliedJobs.job",
+        populate: {
+          path: "company",
+          select: "name logo website industry size",
+        },
+      })
+
+    console.log("Updated profile with saved jobs:", {
+      profileId: updatedProfile._id,
+      savedJobsCount: updatedProfile.savedJobs.length,
+      savedJobs: updatedProfile.savedJobs.map((job: any) => ({
+        id: job._id,
+        title: job.title,
+        company: job.company?.name
+      }))
+    })
 
     return NextResponse.json(updatedProfile)
   } catch (error: any) {
@@ -87,11 +108,19 @@ export async function DELETE(
         path: "company",
         select: "name logo website industry size",
       },
+    }).populate({
+      path: "appliedJobs.job",
+      populate: {
+        path: "company",
+        select: "name logo website industry size",
+      },
     })
 
     if (!profile) {
       return NextResponse.json({ message: "Profile not found" }, { status: 404 })
     }
+
+    console.log("Job unsaved via DELETE:", jobId)
 
     return NextResponse.json(profile)
   } catch (error: any) {

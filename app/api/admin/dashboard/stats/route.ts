@@ -1,10 +1,11 @@
 import { NextResponse } from "next/server"
-import { connectToDatabase } from "@/lib/mongodb"
+import dbConnect from "@/lib/db"
 import { User } from "@/models/User"
 import Job from "@/models/Job"
 import Application from "@/models/Application"
 import { Employer } from "@/models/Employer"
 import JobSeeker from "@/models/JobSeeker"
+import { authenticateUser, type AuthRequest } from "@/lib/auth"
 import { Types } from "mongoose"
 
 interface DashboardJob {
@@ -40,9 +41,22 @@ interface DashboardUser {
   createdAt: string
 }
 
-export async function GET() {
+export async function GET(req: AuthRequest) {
   try {
-    await connectToDatabase()
+    await dbConnect()
+
+    // Authenticate user
+    const user = await authenticateUser(req)
+
+    if (!user) {
+      return NextResponse.json({ message: "Not authorized" }, { status: 401 })
+    }
+
+    if (user.role !== "admin") {
+      return NextResponse.json({ message: "Only admins can access this endpoint" }, { status: 403 })
+    }
+
+    console.log("Admin dashboard stats requested by:", user.email)
 
     // Get total counts
     const [
@@ -57,9 +71,16 @@ export async function GET() {
       Employer.countDocuments(),
     ])
 
+    console.log("Dashboard counts:", {
+      totalUsers,
+      totalJobs,
+      totalApplications,
+      totalEmployers
+    })
+
     // Get user statistics
     const userStats = await Promise.all([
-      User.countDocuments({ role: "job_seeker" }),
+      User.countDocuments({ role: "jobseeker" }),
       User.countDocuments({ role: "employer" }),
       User.countDocuments({ role: "admin" }),
       User.countDocuments({ isVerified: true }),
@@ -109,13 +130,13 @@ export async function GET() {
       .lean()
       .then(async (jobs) => {
         const jobsWithApplications = await Promise.all(
-          jobs.map(async (job) => {
+          jobs.map(async (job: any) => {
             const applications = await Application.countDocuments({ job: job._id })
             return {
               _id: job._id.toString(),
               title: job.title,
               company: {
-                name: job.company.name,
+                name: job.company?.name || "Unknown Company",
               },
               createdAt: job.createdAt.toISOString(),
               applications,
@@ -140,22 +161,22 @@ export async function GET() {
       .populate("applicant", "name")
       .select("job applicant status createdAt")
       .lean()
-      .then(applications => applications.map(app => ({
+      .then(applications => applications.map((app: any) => ({
         _id: app._id.toString(),
         job: {
-          title: app.job.title,
+          title: app.job?.title || "Unknown Job",
           company: {
-            name: app.job.company.name,
+            name: app.job?.company?.name || "Unknown Company",
           },
         },
         applicant: {
-          name: app.applicant.name,
+          name: app.applicant?.name || "Unknown Applicant",
         },
         status: app.status,
         createdAt: app.createdAt.toISOString(),
       })))
 
-    return NextResponse.json({
+    const response = {
       totalUsers,
       totalJobs,
       totalApplications,
@@ -165,7 +186,10 @@ export async function GET() {
       recentUsers,
       recentJobs,
       recentApplications,
-    })
+    }
+
+    console.log("Dashboard stats generated successfully")
+    return NextResponse.json(response)
   } catch (error) {
     console.error("Error fetching dashboard stats:", error)
     return NextResponse.json(

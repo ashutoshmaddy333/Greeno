@@ -71,6 +71,12 @@ export async function GET(req: AuthRequest) {
       return NextResponse.json(newProfile)
     }
 
+    console.log("Profile fetched successfully:", {
+      profileId: profile._id,
+      savedJobsCount: profile.savedJobs?.length || 0,
+      appliedJobsCount: profile.appliedJobs?.length || 0
+    })
+
     return NextResponse.json(profile)
   } catch (error: any) {
     console.error("Get profile error:", error)
@@ -144,6 +150,9 @@ export async function PUT(req: AuthRequest) {
         runValidators: true 
       }
     ).populate({
+      path: "user",
+      select: "name email"
+    }).populate({
       path: "savedJobs",
       populate: {
         path: "company",
@@ -155,6 +164,12 @@ export async function PUT(req: AuthRequest) {
         path: "company",
         select: "name logo website industry size",
       },
+    })
+
+    console.log("Profile updated successfully:", {
+      profileId: profile._id,
+      savedJobsCount: profile.savedJobs?.length || 0,
+      appliedJobsCount: profile.appliedJobs?.length || 0
     })
 
     return NextResponse.json(profile)

@@ -122,7 +122,7 @@ export default function AboutPage() {
       <section className="container mx-auto py-12 sm:py-16 px-2 sm:px-4 md:px-6 md:py-24">
         <div className="mx-auto max-w-3xl text-center">
           <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tighter">Our Core Values</h2>
-          <p className="mt-4 text-muted-foreground text-base sm:text-lg md:text-xl">These principles guide everything we do at JobConnect</p>
+          <p className="mt-4 text-muted-foreground text-base sm:text-lg md:text-xl">These principles guide everything we do at Greenotech Jobs</p>
         </div>
         <div className="mt-8 sm:mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           <Card className="flex flex-col items-center p-6 text-center">

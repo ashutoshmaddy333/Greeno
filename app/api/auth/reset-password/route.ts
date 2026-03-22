@@ -1,44 +1,84 @@
 import { NextResponse } from 'next/server';
-import { connectToDatabase } from '@/lib/mongodb';
+import jwt from 'jsonwebtoken';
+import dbConnect from '@/lib/db';
 import { User } from '@/models/User';
-import bcrypt from 'bcryptjs';
+
+type ResetJwtPayload = {
+  type?: string;
+  userId?: string;
+};
 
 export async function POST(req: Request) {
   try {
-    const { email, password } = await req.json();
+    const { token, password } = await req.json();
 
-    if (!email || !password) {
+    if (!token || !password) {
       return NextResponse.json(
-        { message: 'Missing required fields' },
+        { error: 'Missing required fields' },
         { status: 400 }
       );
     }
 
-    await connectToDatabase();
-
-    // Find user and update password
-    const hashedPassword = await bcrypt.hash(password, 10);
-    const user = await User.findOneAndUpdate(
-      { email },
-      { $set: { password: hashedPassword } },
-      { new: true }
-    );
-
-    if (!user) {
+    if (password.length < 6) {
       return NextResponse.json(
-        { message: 'User not found' },
-        { status: 404 }
+        { error: 'Password must be at least 6 characters long' },
+        { status: 400 }
       );
     }
 
-    return NextResponse.json({
-      message: 'Password reset successfully'
+    await dbConnect();
+
+    let user = await User.findOne({
+      passwordResetToken: token,
+      passwordResetExpires: { $gt: new Date() },
     });
-  } catch (error) {
-    console.error('Error resetting password:', error);
+
+    if (!user) {
+      const secret = process.env.JWT_SECRET;
+      if (!secret) {
+        return NextResponse.json(
+          { error: 'Server configuration error' },
+          { status: 500 }
+        );
+      }
+      try {
+        const decoded = jwt.verify(token, secret) as ResetJwtPayload;
+        if (decoded.type !== 'password-reset' || !decoded.userId) {
+          return NextResponse.json(
+            { error: 'Invalid or expired reset token' },
+            { status: 400 }
+          );
+        }
+        user = await User.findById(decoded.userId);
+      } catch {
+        return NextResponse.json(
+          { error: 'Invalid or expired reset token' },
+          { status: 400 }
+        );
+      }
+    }
+
+    if (!user) {
+      return NextResponse.json(
+        { error: 'Invalid or expired reset token' },
+        { status: 400 }
+      );
+    }
+
+    user.password = password;
+    user.passwordResetToken = undefined;
+    user.passwordResetExpires = undefined;
+    await user.save();
+
     return NextResponse.json(
-      { message: 'Internal server error' },
+      { message: 'Password updated successfully' },
+      { status: 200 }
+    );
+  } catch (error) {
+    console.error('Reset password API error:', error);
+    return NextResponse.json(
+      { error: 'Internal server error' },
       { status: 500 }
     );
   }
-} 
+}

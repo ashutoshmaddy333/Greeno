@@ -18,7 +18,7 @@ export default function Testimonials() {
           <CardContent className="p-6">
             <QuoteIcon className="h-8 w-8 text-primary/20" />
             <p className="mt-4 text-muted-foreground">
-              "JobConnect made my job search incredibly easy. Within two weeks, I had multiple interviews lined up and
+              "Greenotech Jobs made my job search incredibly easy. Within two weeks, I had multiple interviews lined up and
               landed my dream role at a tech startup."
             </p>
             <div className="mt-6 flex items-center space-x-4">
@@ -41,7 +41,7 @@ export default function Testimonials() {
           <CardContent className="p-6">
             <QuoteIcon className="h-8 w-8 text-primary/20" />
             <p className="mt-4 text-muted-foreground">
-              "As someone transitioning careers, I was worried about finding the right opportunity. JobConnect's
+              "As someone transitioning careers, I was worried about finding the right opportunity. Greenotech Jobs's
               matching algorithm connected me with companies that valued my transferable skills."
             </p>
             <div className="mt-6 flex items-center space-x-4">
@@ -64,7 +64,7 @@ export default function Testimonials() {
           <CardContent className="p-6">
             <QuoteIcon className="h-8 w-8 text-primary/20" />
             <p className="mt-4 text-muted-foreground">
-              "The resources and career advice on JobConnect helped me prepare for interviews and negotiate a salary
+              "The resources and career advice on Greenotech Jobs helped me prepare for interviews and negotiate a salary
               that was 20% higher than my previous role."
             </p>
             <div className="mt-6 flex items-center space-x-4">

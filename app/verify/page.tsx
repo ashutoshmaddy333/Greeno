@@ -100,25 +100,13 @@ export default function VerifyPage() {
         // Redirect to profile page
         router.push('/profile');
       } else {
-        // For forgot password flow
-        showToast.success('OTP verified! Redirecting to your profile...');
-        
-        // Get the user's role from the verification response
-        const role = data.role || data.user?.role;
-        console.log('Forgot password verification - User role:', role);
-        
-        if (!role) {
-          console.error('No role found in verification response:', data);
-          showToast.error('Error: Could not determine user role. Please try again.');
+        showToast.success('Code verified. Set your new password.');
+        const t = data.token as string | undefined;
+        if (!t) {
+          showToast.error('Missing reset session. Please try again.');
           return;
         }
-
-        // Store the token in localStorage
-        localStorage.setItem('token', data.token);
-        
-        // Navigate to profile page
-        console.log('Navigating to profile page for role:', role);
-        router.push('/profile');
+        router.push(`/reset-password?token=${encodeURIComponent(t)}`);
       }
     } catch (error) {
       showToast.dismiss(loadingToast);

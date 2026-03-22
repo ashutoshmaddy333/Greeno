@@ -15,6 +15,7 @@ import { CreateCompanyForm } from "@/components/create-company-form"
 import { getEmployerProfile } from "@/lib/actions"
 import { useToast } from "@/components/ui/use-toast"
 import { getLogoUrl } from "@/lib/utils"
+import { SettingsDisplay } from "@/components/settings-display"
 
 interface Company {
   _id: string
@@ -113,15 +114,24 @@ export default function EmployerDashboard() {
   }, [company, fetchProfile])
 
   const handleCompanyCreated = async (newCompany: Company) => {
+    console.log("Company created successfully:", newCompany)
+    
+    // Update the company state immediately
     setCompany(newCompany)
     setShowCreateCompany(false)
+    
     toast({
       title: "Success",
       description: "Company profile created successfully!",
       variant: "default"
     })
-    // Fetch updated stats
-    await fetchProfile()
+    
+    // Fetch updated stats and ensure fresh data
+    try {
+      await fetchProfile()
+    } catch (error) {
+      console.error("Error fetching updated profile:", error)
+    }
   }
 
   if (isLoading || profileLoading) {
@@ -175,6 +185,14 @@ export default function EmployerDashboard() {
                   src={getLogoUrl(company.logo)}
                   alt={company.name}
                   className="h-20 w-20 object-contain"
+                  onError={(e) => {
+                    console.error("Logo failed to load:", company.logo)
+                    const target = e.target as HTMLImageElement
+                    target.src = "/placeholder.svg"
+                  }}
+                  onLoad={() => {
+                    console.log("Logo loaded successfully:", company.logo)
+                  }}
                 />
               </div>
               <div className="flex-1 text-center sm:text-left">
@@ -253,7 +271,7 @@ export default function EmployerDashboard() {
             </TabsList>
 
             <TabsContent value="overview" className="space-y-4">
-              <div className="grid gap-4 md:grid-cols-2">
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                 <Card>
                   <CardHeader>
                     <CardTitle>Quick Actions</CardTitle>
@@ -299,6 +317,14 @@ export default function EmployerDashboard() {
                           src={getLogoUrl(company.logo)}
                           alt={company.name}
                           className="h-14 w-14 object-contain"
+                          onError={(e) => {
+                            console.error("Logo failed to load:", company.logo)
+                            const target = e.target as HTMLImageElement
+                            target.src = "/placeholder.svg"
+                          }}
+                          onLoad={() => {
+                            console.log("Logo loaded successfully:", company.logo)
+                          }}
                         />
                       </div>
                       <div>
@@ -335,6 +361,8 @@ export default function EmployerDashboard() {
                     </div>
                   </CardContent>
                 </Card>
+
+                <SettingsDisplay />
               </div>
             </TabsContent>
 
@@ -394,6 +422,14 @@ export default function EmployerDashboard() {
                         src={getLogoUrl(company.logo)}
                         alt={company.name}
                         className="h-28 w-28 object-contain"
+                        onError={(e) => {
+                          console.error("Logo failed to load:", company.logo)
+                          const target = e.target as HTMLImageElement
+                          target.src = "/placeholder.svg"
+                        }}
+                        onLoad={() => {
+                          console.log("Logo loaded successfully:", company.logo)
+                        }}
                       />
                     </div>
                     <div className="space-y-2">

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server"
-import { connectToDatabase } from "@/lib/mongodb"
+import dbConnect from "@/lib/db"
 import Application from "@/models/Application"
 import { Types } from "mongoose"
 
@@ -70,7 +70,7 @@ interface ApplicationResponse {
 // GET /api/admin/applications - Get all applications with pagination and filtering
 export async function GET(request: Request) {
   try {
-    await connectToDatabase()
+    await dbConnect()
 
     const { searchParams } = new URL(request.url)
     const page = parseInt(searchParams.get("page") || "1")
@@ -112,17 +112,17 @@ export async function GET(request: Request) {
       .then(applications => applications.map(app => ({
         _id: app._id.toString(),
         job: {
-          _id: app.job._id.toString(),
-          title: app.job.title,
+          _id: app.job?._id?.toString() || "unknown",
+          title: app.job?.title || "Unknown Job",
           company: {
-            _id: app.job.company._id.toString(),
-            name: app.job.company.name,
+            _id: app.job?.company?._id?.toString() || "unknown",
+            name: app.job?.company?.name || "Unknown Company",
           },
         },
         applicant: {
-          _id: app.applicant._id.toString(),
-          name: app.applicant.name,
-          email: app.applicant.email,
+          _id: app.applicant?._id?.toString() || "unknown",
+          name: app.applicant?.name || "Unknown Applicant",
+          email: app.applicant?.email || "unknown@example.com",
         },
         status: app.status,
         experience: app.experience,
@@ -158,7 +158,7 @@ export async function PATCH(
   { params }: { params: { id: string } }
 ) {
   try {
-    await connectToDatabase()
+    await dbConnect()
 
     const { id } = params
     const body = await request.json()
@@ -199,17 +199,17 @@ export async function PATCH(
     return NextResponse.json({
       _id: application._id.toString(),
       job: {
-        _id: application.job._id.toString(),
-        title: application.job.title,
+        _id: application.job?._id?.toString() || "unknown",
+        title: application.job?.title || "Unknown Job",
         company: {
-          _id: application.job.company._id.toString(),
-          name: application.job.company.name,
+          _id: application.job?.company?._id?.toString() || "unknown",
+          name: application.job?.company?.name || "Unknown Company",
         },
       },
       applicant: {
-        _id: application.applicant._id.toString(),
-        name: application.applicant.name,
-        email: application.applicant.email,
+        _id: application.applicant?._id?.toString() || "unknown",
+        name: application.applicant?.name || "Unknown Applicant",
+        email: application.applicant?.email || "unknown@example.com",
       },
       status: application.status,
       experience: application.experience,
@@ -235,7 +235,7 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
-    await connectToDatabase()
+    await dbConnect()
 
     const { id } = params
 

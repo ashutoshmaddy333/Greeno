@@ -1,6 +1,6 @@
 import mongoose, { Schema, Document, Model } from "mongoose"
 import { hashPassword } from "@/lib/auth"
-import bcrypt from "bcryptjs"
+import bcryptjs from "bcryptjs"
 
 export interface IUser extends Document {
   name: string
@@ -11,6 +11,8 @@ export interface IUser extends Document {
   oauthId?: string
   isEmailVerified: boolean
   isVerified: boolean
+  passwordResetToken?: string
+  passwordResetExpires?: Date
   createdAt: Date
   updatedAt: Date
   comparePassword(candidatePassword: string): Promise<boolean>
@@ -31,29 +33,22 @@ const UserSchema: Schema = new Schema(
       trim: true,
       lowercase: true,
       match: [
-        /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/,
-        "Please provide a valid email",
+        /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/,
+        "Please add a valid email",
       ],
     },
     password: {
       type: String,
-      required: function(this: IUser) {
+      required: function (this: IUser) {
         return !this.oauthProvider
       },
       minlength: [6, "Password must be at least 6 characters"],
-      validate: {
-        validator: function(this: IUser, value: string) {
-          if (this.oauthProvider) return true
-          return value && value.length >= 6
-        },
-        message: "Password must be at least 6 characters when not using OAuth"
-      }
+      select: false,
     },
     role: {
       type: String,
       enum: ["jobseeker", "employer", "admin"],
       default: "jobseeker",
-      required: true,
     },
     oauthProvider: {
       type: String,
@@ -69,6 +64,12 @@ const UserSchema: Schema = new Schema(
     isVerified: {
       type: Boolean,
       default: false,
+    },
+    passwordResetToken: {
+      type: String,
+    },
+    passwordResetExpires: {
+      type: Date,
     },
   },
   {
@@ -91,7 +92,7 @@ UserSchema.pre("save", async function (this: IUser, next) {
 
 // Compare password method
 UserSchema.methods.comparePassword = async function (candidatePassword: string): Promise<boolean> {
-  return bcrypt.compare(candidatePassword, this.password)
+  return bcryptjs.compare(candidatePassword, this.password)
 }
 
 // Prevent mongoose from creating a new model if it already exists

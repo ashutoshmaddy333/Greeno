@@ -8,14 +8,13 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { ArrowLeft, CheckCircle, MailIcon } from "lucide-react"
+import { ArrowLeft, MailIcon } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { showToast } from "@/lib/toast"
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("")
   const [isLoading, setIsLoading] = useState(false)
-  const [isSubmitted, setIsSubmitted] = useState(false)
   const router = useRouter()
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -24,10 +23,10 @@ export default function ForgotPasswordPage() {
     const loadingToast = showToast.loading("Sending verification code...")
 
     try {
-      const response = await fetch("/api/auth/resend-otp", {
+      const response = await fetch("/api/auth/forgot-password", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, type: "forgot-password" }),
+        body: JSON.stringify({ email }),
       })
 
       const data = await response.json()
@@ -43,8 +42,8 @@ export default function ForgotPasswordPage() {
       }
 
       showToast.dismiss(loadingToast)
-      showToast.success("Verification code sent to your email!")
-      setIsSubmitted(true)
+      showToast.success("Verification code sent to your email")
+      router.push(`/verify?email=${encodeURIComponent(email)}&type=forgot-password`)
     } catch (error) {
       showToast.dismiss(loadingToast)
       showToast.error("Failed to send verification code. Please try again.")
@@ -61,13 +60,13 @@ export default function ForgotPasswordPage() {
           <div className="space-y-2">
             <h1 className="text-2xl sm:text-3xl font-bold tracking-tighter">Reset Your Password</h1>
             <p className="text-base sm:text-lg text-muted-foreground">
-              Enter your email address and we'll send you a verification code to reset your password.
+              Enter your email and we&apos;ll send a verification code to reset your password.
             </p>
           </div>
           <div className="flex h-40 sm:h-60 md:h-[300px] items-center justify-center rounded-lg bg-muted">
             <img
-              src="/placeholder.svg?height=300&width=400"
-              alt="Forgot password illustration"
+              src="/1.jpg?height=300&width=400"
+              alt="Login illustration"
               className="h-full w-full rounded-lg object-cover"
             />
           </div>
@@ -77,64 +76,30 @@ export default function ForgotPasswordPage() {
             <CardHeader className="space-y-1">
               <CardTitle className="text-2xl font-bold">Forgot Password</CardTitle>
               <CardDescription>
-                {isSubmitted
-                  ? "Check your email for a verification code"
-                  : "Enter your email address to receive a verification code"}
+                Enter your email to receive a verification code
               </CardDescription>
             </CardHeader>
             <CardContent>
-              {isSubmitted ? (
-                <div className="flex flex-col items-center justify-center space-y-4 py-6">
-                  <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
-                    <CheckCircle className="h-8 w-8 text-primary" />
-                  </div>
-                  <div className="text-center">
-                    <h3 className="text-lg font-medium">Verification Code Sent!</h3>
-                    <p className="mt-1 text-sm text-muted-foreground">
-                      We've sent a verification code to <span className="font-medium">{email}</span>
-                    </p>
-                    <p className="mt-4 text-sm text-muted-foreground">
-                      Didn't receive the code? Check your spam folder or{" "}
-                      <button
-                        onClick={() => {
-                          setIsSubmitted(false)
-                          setEmail("")
-                        }}
-                        className="font-medium text-primary underline-offset-4 hover:underline"
-                      >
-                        try again
-                      </button>
-                    </p>
-                    <Button
-                      onClick={() => router.push(`/verify?email=${encodeURIComponent(email)}&type=forgot-password`)}
-                      className="mt-4 w-full"
-                    >
-                      Enter Verification Code
-                    </Button>
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="email">Email</Label>
+                  <div className="relative">
+                    <MailIcon className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      id="email"
+                      type="email"
+                      placeholder="name@example.com"
+                      className="pl-9"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      required
+                    />
                   </div>
                 </div>
-              ) : (
-                <form onSubmit={handleSubmit} className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="email">Email</Label>
-                    <div className="relative">
-                      <MailIcon className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                      <Input
-                        id="email"
-                        type="email"
-                        placeholder="name@example.com"
-                        className="pl-9"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        required
-                      />
-                    </div>
-                  </div>
-                  <Button type="submit" className="w-full button-hover" disabled={isLoading}>
-                    {isLoading ? "Sending..." : "Send Reset Link"}
-                  </Button>
-                </form>
-              )}
+                <Button type="submit" className="w-full button-hover" disabled={isLoading}>
+                  {isLoading ? "Sending..." : "Send verification code"}
+                </Button>
+              </form>
             </CardContent>
             <CardFooter className="flex flex-col space-y-4">
               <div className="relative flex items-center">

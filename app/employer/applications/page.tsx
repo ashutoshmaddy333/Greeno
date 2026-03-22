@@ -111,9 +111,10 @@ export default function ApplicationsPage() {
       const data = await response.json()
 
       if (data.success) {
-        setJobs(data.jobs || [])
-        if (data.jobs?.length > 0) {
-          setSelectedJob(data.jobs[0].id)
+        const jobsData = data.jobs || []
+        setJobs(jobsData)
+        if (jobsData.length > 0) {
+          setSelectedJob(jobsData[0].id)
         }
       } else {
         throw new Error(data.message || "Failed to fetch jobs")
@@ -122,6 +123,7 @@ export default function ApplicationsPage() {
       const errorMessage = error.message || "Failed to fetch jobs"
       setError(errorMessage)
       showToast.error(errorMessage)
+      setJobs([]) // Ensure jobs is always an array
     }
   }
 
@@ -137,7 +139,9 @@ export default function ApplicationsPage() {
       const data = await response.json()
 
       if (data.success) {
-        setApplications(data.applications || [])
+        const applicationsData = data.applications || []
+        setApplications(applicationsData)
+        console.log("Fetched applications:", applicationsData.length)
       } else {
         throw new Error(data.message || "Failed to fetch applications")
       }
@@ -170,7 +174,7 @@ export default function ApplicationsPage() {
         showToast.success("Application status updated successfully")
         // Update the local state
         setApplications((prev) =>
-          prev.map((app) =>
+          (prev || []).map((app) =>
             app.id === applicationId ? { ...app, status: newStatus } : app
           )
         )
@@ -254,7 +258,7 @@ export default function ApplicationsPage() {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Jobs</SelectItem>
-            {jobs?.map((job) => (
+            {(jobs || []).map((job) => (
               <SelectItem key={job.id} value={job.id}>
                 {job.title}
               </SelectItem>
@@ -286,7 +290,7 @@ export default function ApplicationsPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {applications.map((application) => (
+                  {(applications || []).map((application) => (
                     <TableRow key={application.id}>
                       <TableCell>
                         <div>
@@ -434,7 +438,7 @@ export default function ApplicationsPage() {
                 <div>
                   <h3 className="text-lg font-semibold mb-4">Education</h3>
                   <div className="space-y-4">
-                    {selectedApplication.education.map((edu, index) => (
+                    {(selectedApplication.education || []).map((edu, index) => (
                       <div key={index} className="border rounded-lg p-4">
                         <div className="flex items-center mb-2">
                           <GraduationCap className="mr-2 h-4 w-4" />

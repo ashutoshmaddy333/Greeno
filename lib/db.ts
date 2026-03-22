@@ -35,12 +35,12 @@ if (!global.mongoose) {
 
 const cached: MongooseCache = global.mongoose
 
-// Admin credentials - hardcoded for development
+// Admin credentials from env (see .env: ADMIN_EMAIL, ADMIN_PASSWORD, ADMIN_NAME)
 export const ADMIN_CREDENTIALS = {
-  email: "admin@jobconnect.com",
-  password: "Admin@123", // This will be hashed before saving
-  role: "admin",
-  name: "Admin User"
+  email: process.env.ADMIN_EMAIL ?? "admin@system.com",
+  password: process.env.ADMIN_PASSWORD ?? "Admin@123",
+  role: "admin" as const,
+  name: process.env.ADMIN_NAME ?? "Admin User",
 }
 
 async function dbConnect(): Promise<typeof mongoose> {

@@ -3,16 +3,9 @@ import dbConnect from "@/lib/db"
 import Company from "@/models/Company"
 import Job from "@/models/Job"
 import { authenticateUser, type AuthRequest } from "@/lib/auth"
-import formidable from "formidable"
 import path from "path"
 import fs from "fs/promises"
-
-// Set this to false to allow formidable to handle the body parsing
-export const config = {
-  api: {
-    bodyParser: false,
-  },
-}
+import { writeFile } from "fs/promises"
 
 export async function GET(req: AuthRequest) {
   try {
@@ -84,25 +77,74 @@ export async function POST(req: AuthRequest) {
       return NextResponse.json({ success: false, message: "You already have a company profile" }, { status: 400 })
     }
 
-    // Parse the form data, including the file
-    const form = formidable({
-      uploadDir: path.join(process.cwd(), "public/uploads"),
-      keepExtensions: true,
-      maxFileSize: 5 * 1024 * 1024, // 5MB limit
-    })
-
-    const [fields, files] = await form.parse(req as any) as [any, any]
-
-    const companyData = JSON.parse(fields.data[0])
-    const logoFile = files.logo ? files.logo[0] : null
-
+    // Parse the form data
+    const formData = await req.formData()
+    
+    // Extract company data
+    const data = formData.get('data') as string
+    const companyData = JSON.parse(data)
+    
+    // Handle logo file
+    const logoFile = formData.get('logo') as File | null
     let logoPath = ""
-    if (logoFile) {
-      const oldPath = logoFile.filepath
-      const filename = logoFile.newFilename
-      const newPath = path.join(process.cwd(), "public/uploads", filename)
-      await fs.rename(oldPath, newPath)
-      logoPath = `/uploads/${filename}` // Store the relative path
+    
+    if (logoFile && logoFile.size > 0) {
+      console.log("Processing logo file:", {
+        name: logoFile.name,
+        type: logoFile.type,
+        size: logoFile.size
+      })
+
+      // Validate file size (5MB limit)
+      if (logoFile.size > 5 * 1024 * 1024) {
+        return NextResponse.json({ 
+          success: false, 
+          message: "Logo file size must be less than 5MB" 
+        }, { status: 400 })
+      }
+
+      // Validate file type
+      const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp']
+      if (!allowedTypes.includes(logoFile.type)) {
+        return NextResponse.json({ 
+          success: false, 
+          message: "Logo must be a valid image file (JPEG, PNG, GIF, or WebP)" 
+        }, { status: 400 })
+      }
+
+      try {
+        // Create uploads directory if it doesn't exist
+        const uploadsDir = path.join(process.cwd(), "public/uploads")
+        await fs.mkdir(uploadsDir, { recursive: true })
+
+        // Generate unique filename
+        const timestamp = Date.now()
+        const fileExtension = logoFile.name.split('.').pop()?.toLowerCase() || 'jpg'
+        const filename = `logo_${timestamp}.${fileExtension}`
+        const filepath = path.join(uploadsDir, filename)
+
+        console.log("Saving logo file to:", filepath)
+
+        // Convert file to buffer and save
+        const bytes = await logoFile.arrayBuffer()
+        const buffer = Buffer.from(bytes)
+        await writeFile(filepath, buffer)
+        
+        // Verify file was saved
+        const fileExists = await fs.access(filepath).then(() => true).catch(() => false)
+        if (!fileExists) {
+          throw new Error("Failed to save logo file")
+        }
+        
+        logoPath = `/uploads/${filename}`
+        console.log("Logo saved successfully:", logoPath)
+      } catch (error) {
+        console.error("Error saving logo file:", error)
+        return NextResponse.json({ 
+          success: false, 
+          message: "Failed to save logo file. Please try again." 
+        }, { status: 500 })
+      }
     }
 
     // Validate required fields
@@ -133,11 +175,25 @@ export async function POST(req: AuthRequest) {
     }
 
     // Create company
-    const company = await Company.create({
+    const companyDataToSave = {
       ...companyData,
       owner: user._id,
       jobs: [],
-      ...(logoPath && { logo: logoPath }), // Add logo path if available
+    }
+
+    // Add logo path if available
+    if (logoPath) {
+      companyDataToSave.logo = logoPath
+    }
+
+    console.log("Creating company with data:", companyDataToSave)
+
+    const company = await Company.create(companyDataToSave)
+
+    console.log("Company created successfully:", {
+      _id: company._id,
+      name: company.name,
+      logo: company.logo
     })
 
     return NextResponse.json({

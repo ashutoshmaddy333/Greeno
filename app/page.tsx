@@ -12,6 +12,7 @@ import JobCategories from "@/components/job-categories"
 import JobAlertsSection from "@/components/job-alerts-section"
 import RemoteJobsSection from "@/components/remote-jobs-section"
 import Footer from "@/components/footer"
+import { SettingsDisplay } from "@/components/settings-display"
 
 export default function Home() {
   const router = useRouter()
@@ -230,6 +231,11 @@ export default function Home() {
       {/* Job Alerts */}
       <section id="job-alerts">
         <JobAlertsSection />
+      </section>
+
+      {/* System Status */}
+      <section id="system-status" className="container mx-auto py-12 px-4 md:px-6">
+        <SettingsDisplay />
       </section>
 
       {/* CTA Section */}

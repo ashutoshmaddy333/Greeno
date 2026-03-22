@@ -58,7 +58,7 @@ export default function Footer() {
           <div className="space-y-4 lg:col-span-2">
             <Link href="/" className="flex items-center gap-2" onClick={(e) => handleLinkClick(e, "/")}>
               <Briefcase className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
-              <span className="text-lg sm:text-xl font-bold">JobConnect</span>
+              <span className="text-lg sm:text-xl font-bold">Greenotech Jobs</span>
             </Link>
             <p className="max-w-xs text-sm sm:text-base text-muted-foreground">
               Connecting talented professionals with their dream careers and helping employers find the perfect
@@ -187,7 +187,7 @@ export default function Footer() {
         </div>
 
         <div className="mt-6 sm:mt-8 border-t pt-6 sm:pt-8 text-center text-xs sm:text-sm text-muted-foreground">
-          <p>© {new Date().getFullYear()} JobConnect. All rights reserved.</p>
+          <p>© {new Date().getFullYear()} Greenotech Jobs. All rights reserved.</p>
         </div>
       </div>
     </footer>

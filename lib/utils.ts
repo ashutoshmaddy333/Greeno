@@ -11,10 +11,14 @@ export function cn(...inputs: ClassValue[]) {
  * @returns The full URL for the logo image
  */
 export function getLogoUrl(logoPath: string | undefined): string {
-  if (!logoPath) return "/placeholder.svg"
+  if (!logoPath) {
+    console.log("No logo path provided, using placeholder")
+    return "/placeholder.svg"
+  }
   
   // If it's already a full URL, return as is
   if (logoPath.startsWith('http')) {
+    console.log("Logo is already a full URL:", logoPath)
     return logoPath
   }
   
@@ -23,10 +27,13 @@ export function getLogoUrl(logoPath: string | undefined): string {
     // Use NEXT_PUBLIC_BASE_URL in production, window.location.origin in development
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 
       (typeof window !== 'undefined' ? window.location.origin : '')
-    return `${baseUrl}${logoPath}`
+    const fullUrl = `${baseUrl}${logoPath}`
+    console.log("Generated logo URL:", fullUrl)
+    return fullUrl
   }
   
   // For any other case, return the path as is
+  console.log("Using logo path as is:", logoPath)
   return logoPath
 }
 

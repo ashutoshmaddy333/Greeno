@@ -81,13 +81,12 @@ const UserSchema: Schema = new Schema(
 UserSchema.index({ oauthProvider: 1, oauthId: 1 }, { unique: true, sparse: true })
 
 // Hash password before saving only if it's provided and modified
-UserSchema.pre("save", async function (this: IUser, next) {
+// Async middleware: do not use next() — Mongoose 8+ may not pass a valid next callback here
+UserSchema.pre("save", async function (this: IUser) {
   if (!this.isModified("password") || !this.password) {
-    next()
     return
   }
   this.password = await hashPassword(this.password)
-  next()
 })
 
 // Compare password method

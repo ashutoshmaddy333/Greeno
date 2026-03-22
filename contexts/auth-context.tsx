@@ -125,7 +125,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (!response.ok) {
         console.log("Login response:", data)
-        throw new Error(data.message || "Login failed")
+        const detail =
+          typeof data.error === "string" && data.error
+            ? [data.message, data.error].filter(Boolean).join(" — ")
+            : data.message || "Login failed"
+        throw new Error(detail)
       }
 
       // Ensure the user object has the correct structure
